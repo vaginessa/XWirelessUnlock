@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">WirelessUnlock</string>
+
+    <string name="settings_btDevicesTitle">Select trusted bluetooth device(s)</string>
+    <string name="settings_wifiDevicesTitle">Select trusted WiFi Network(s)</string>
+    <string name="wifi_scanning">Scanning for Wifi networks...</string>
+    <string name="wifi_hiddenNetwork">**Hidden SSID**</string>
+</resources>

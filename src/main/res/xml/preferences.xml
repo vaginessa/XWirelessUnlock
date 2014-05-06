@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <CheckBoxPreference
+        android:key="onlyWhenCharging"
+        android:title="Only when charging"
+        android:summary="Only activate when device is charging"
+        android:defaultValue="true"
+    />
+
+    <PreferenceCategory
+        android:key="key_btDevices"
+        android:title="@string/settings_btDevicesTitle"
+    />
+    <PreferenceCategory
+        android:key="key_wifiNetworks"
+        android:title="@string/settings_wifiDevicesTitle"
+    />
+
+</PreferenceScreen>
