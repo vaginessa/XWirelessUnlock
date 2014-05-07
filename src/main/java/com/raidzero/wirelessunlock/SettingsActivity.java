@@ -3,12 +3,15 @@ package com.raidzero.wirelessunlock;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.os.IBinder;
 import android.preference.CheckBoxPreference;
 import android.preference.PreferenceActivity;
 import android.os.Bundle;
@@ -26,29 +29,62 @@ public class SettingsActivity extends PreferenceActivity implements
 
     private static final String tag = "WirelessUnlock/PreferenceActivity";
 
+    private static LockService lockService;
+    private boolean isBound = false;
+
     // wifi stuff
     private WifiManager wifiManager = null;
     private List<ScanResult> scanResults = null;
     private WifiReceiver wifiReceiver = null;
-    private static AppHelper appHelper = null;
     PreferenceCategory btCategory = null;
     PreferenceCategory wifiCategory = null;
+
+    private ServiceConnection myConnection = new ServiceConnection() {
+
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            LockService.MyLocalBinder binder = (LockService.MyLocalBinder) service;
+            lockService = binder.getService();
+            isBound = true;
+        }
+
+        public void onServiceDisconnected(ComponentName arg0) {
+            isBound = false;
+        }
+    };
 
     protected void onResume() {
         super.onResume();
         getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
-        appHelper.processChanges();
+        if (lockService != null) {
+            lockService.processChanges();
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // unbind from it so it doesn't kill the service
+        unbindService(myConnection);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        appHelper = new AppHelper();
-
-        if (appHelper == null) { Log.d(tag, "appHelper is null"); }
-
         addPreferencesFromResource(R.xml.preferences);
+
+        // send intent to start service
+        if (!lockService.isRunning()) {
+            sendBroadcast(new Intent("com.raidzero.wirelessunlock.APP_STARTED"));
+        }
+        else {
+            Log.d(tag, "Service already running");
+        }
+
+        // bind to it
+        Intent intent = new Intent(this, LockService.class);
+        bindService(intent, myConnection, Context.BIND_AUTO_CREATE);
 
         // register wifi stuff and start scan
         wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
@@ -83,14 +119,9 @@ public class SettingsActivity extends PreferenceActivity implements
 
     class WifiReceiver extends BroadcastReceiver {
         public void onReceive(Context c, Intent intent) {
-            Log.d(tag, "wifiReceiver!");
             scanResults = wifiManager.getScanResults();
             addWifiNetworks();
         }
-    }
-
-    public static AppHelper getAppHelper() {
-        return appHelper;
     }
 
     private void addWifiNetworks() {
@@ -99,7 +130,6 @@ public class SettingsActivity extends PreferenceActivity implements
 
         if (scanResults != null) {
             for (ScanResult network : scanResults) {
-                // Log.d(tag, "network: " + network.toString());
                 String networkAddr = network.BSSID;
                 String networkName = network.SSID;
 
@@ -110,7 +140,7 @@ public class SettingsActivity extends PreferenceActivity implements
                     networkName = networkName.substring(1, networkName.length() - 1);
                 }
 
-                if (networkName == null || networkName.isEmpty()) {
+                if (networkName == null || networkName.equals("")) {
                     networkName = getResources().getString(R.string.wifi_hiddenNetwork);
                 }
 
@@ -127,6 +157,8 @@ public class SettingsActivity extends PreferenceActivity implements
 
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         // just update
-        appHelper.processChanges();
+        if (lockService != null) {
+            lockService.processChanges();
+        }
     }
 }
