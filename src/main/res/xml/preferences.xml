@@ -3,8 +3,8 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <CheckBoxPreference
         android:key="onlyWhenCharging"
-        android:title="Only when charging"
-        android:summary="Only activate when device is charging"
+        android:title="Only when plugged in"
+        android:summary="Only disable lockscreen via Bluetooth when device is plugged in"
         android:defaultValue="true"
     />
 

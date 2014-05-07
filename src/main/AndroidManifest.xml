@@ -34,7 +34,7 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name=".ConnectionReceiver">
+        <receiver android:name=".Receivers.ConnectionReceiver">
             <intent-filter>
                 <!-- wifi -->
                 <action android:name="android.net.wifi.WIFI_STATE_CHANGED"/>

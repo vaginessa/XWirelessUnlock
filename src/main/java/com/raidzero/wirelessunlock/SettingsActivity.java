@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.preference.CheckBoxPreference;
@@ -20,24 +21,34 @@ import java.util.Set;
 /**
  * Created by raidzero on 5/5/14 6:31 PM
  */
-public class SettingsActivity extends PreferenceActivity {
+public class SettingsActivity extends PreferenceActivity implements
+        SharedPreferences.OnSharedPreferenceChangeListener {
 
-    private static final String tag = "PreferenceActivity";
+    private static final String tag = "WirelessUnlock/PreferenceActivity";
 
     // wifi stuff
     private WifiManager wifiManager = null;
     private List<ScanResult> scanResults = null;
     private WifiReceiver wifiReceiver = null;
-
+    private static AppHelper appHelper = null;
     PreferenceCategory btCategory = null;
     PreferenceCategory wifiCategory = null;
+
+    protected void onResume() {
+        super.onResume();
+        getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
+        appHelper.processChanges();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        addPreferencesFromResource(R.xml.preferences);
+        appHelper = new AppHelper();
 
+        if (appHelper == null) { Log.d(tag, "appHelper is null"); }
+
+        addPreferencesFromResource(R.xml.preferences);
 
         // register wifi stuff and start scan
         wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
@@ -52,12 +63,12 @@ public class SettingsActivity extends PreferenceActivity {
         btCategory = (PreferenceCategory) findPreference("key_btDevices");
         if (pairedDevices != null) {
             for (BluetoothDevice device : pairedDevices) {
-                CheckBoxPreference cb = new CheckBoxPreference(this);
-
                 String deviceAddr = device.getAddress();
                 String deviceName = device.getName();
 
-                cb.setKey(deviceAddr);
+                CheckBoxPreference cb = new CheckBoxPreference(this);
+
+                cb.setKey(String.format(deviceAddr));
                 cb.setSummary(deviceAddr);
                 cb.setTitle(deviceName);
 
@@ -78,18 +89,21 @@ public class SettingsActivity extends PreferenceActivity {
         }
     }
 
+    public static AppHelper getAppHelper() {
+        return appHelper;
+    }
+
     private void addWifiNetworks() {
 
         wifiCategory.setTitle(getResources().getString(R.string.settings_wifiDevicesTitle));
 
         if (scanResults != null) {
             for (ScanResult network : scanResults) {
-                Log.d(tag, "network: " + network.toString());
-
-                CheckBoxPreference cb = new CheckBoxPreference(this);
-
+                // Log.d(tag, "network: " + network.toString());
                 String networkAddr = network.BSSID;
                 String networkName = network.SSID;
+
+                CheckBoxPreference cb = new CheckBoxPreference(this);
 
                 // trim surrounding quotes, if any
                 if (networkName.startsWith("\"") && networkName.endsWith("\"")) {
@@ -100,12 +114,19 @@ public class SettingsActivity extends PreferenceActivity {
                     networkName = getResources().getString(R.string.wifi_hiddenNetwork);
                 }
 
-                cb.setKey(networkAddr);
+                cb.setKey(String.format(networkAddr));
                 cb.setSummary(networkAddr);
                 cb.setTitle(networkName);
 
                 wifiCategory.addPreference(cb);
             }
         }
+
+        unregisterReceiver(wifiReceiver);
+    }
+
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        // just update
+        appHelper.processChanges();
     }
 }
