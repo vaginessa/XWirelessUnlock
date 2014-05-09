@@ -10,6 +10,7 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import com.raidzero.wirelessunlock.global.AppDevice;
 import com.raidzero.wirelessunlock.global.AppHelper;
 import com.raidzero.wirelessunlock.global.Common;
 import com.raidzero.wirelessunlock.receivers.ScreenReceiver;

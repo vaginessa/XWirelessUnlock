@@ -62,7 +62,7 @@ public class AddBluetoothActivity extends ListActivity {
                 String address = d.getAddress();
 
                 // make AppDevice
-                AppDevice device = new AppDevice(AppDevice.DeviceType.BLUETOOTH, name, address);
+                AppDevice device = new AppDevice(AppDevice.DeviceType.BLUETOOTH, name, address, false, true);
 
                 //Log.d(tag, String.format("created device. (name: %s, address: %s)", device.getName(), device.getAddress()));
                 // Add to arraylist
@@ -79,7 +79,7 @@ public class AddBluetoothActivity extends ListActivity {
 
         // pass this device back to main activity
         Intent data = new Intent();
-        data.setData(Uri.parse(device.getAddress()));
+        data.putExtra("device", device);
         setResult(RESULT_OK, data);
         finish();
     }

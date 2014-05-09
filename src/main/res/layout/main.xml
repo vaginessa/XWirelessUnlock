@@ -37,7 +37,7 @@
     <ListView
         android:id="@+id/list_trusted_bluetooth_devices"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
 
     </ListView>
 
@@ -62,8 +62,6 @@
     <ListView
         android:id="@+id/list_trusted_wifi_devices"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-
-
+        android:layout_height="wrap_content"/>
 
 </LinearLayout>

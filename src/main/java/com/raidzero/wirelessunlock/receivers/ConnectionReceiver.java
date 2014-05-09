@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.util.Log;
 import com.raidzero.wirelessunlock.global.AppHelper;
 import com.raidzero.wirelessunlock.global.Common;
@@ -18,7 +17,6 @@ public class ConnectionReceiver extends BroadcastReceiver {
     private final static String tag = "WirelessUnlock/ConnectionReceiver";
 
     private AppHelper appHelper = Common.getAppHelper();
-    private ServiceConnection myConnection = appHelper.getServiceConnection();
 
     @Override
     public void onReceive(Context context, Intent intent) {

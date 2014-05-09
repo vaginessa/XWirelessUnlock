@@ -42,6 +42,7 @@ public class DeviceListAdapter extends ArrayAdapter<AppDevice> {
         // set their values
         txtName.setText(d.getName());
         txtAddr.setText(d.getAddress());
+        chkBox.setChecked(d.getEnabled());
 
         if (!enableCheckbox) {
             // hide checkbox

@@ -15,8 +15,10 @@ import com.raidzero.wirelessunlock.adapters.DeviceListAdapter;
 import com.raidzero.wirelessunlock.global.AppDevice;
 import com.raidzero.wirelessunlock.global.AppHelper;
 import com.raidzero.wirelessunlock.global.Common;
+import com.raidzero.wirelessunlock.global.DeviceListLoader;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * Created by raidzero on 5/7/14 7:51 PM
@@ -49,6 +51,7 @@ public class MainActivity extends ActionBarActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.main);
 
         appHelper = (AppHelper) getApplicationContext();
@@ -68,6 +71,9 @@ public class MainActivity extends ActionBarActivity {
         trustedBluetoothList = (ListView) findViewById(R.id.list_trusted_bluetooth_devices);
         trustedWifiList = (ListView) findViewById(R.id.list_trusted_wifi_devices);
 
+        loadDevices();
+
+        appHelper.processChanges();
     }
 
     @Override
@@ -103,6 +109,8 @@ public class MainActivity extends ActionBarActivity {
         btAdapter = new DeviceListAdapter(this, trustedBluetoothDevices, true);
         wifiAdapter = new DeviceListAdapter(this, trustedWifiNetworks, true);
 
+        loadDevices();
+
         trustedBluetoothList.setAdapter(btAdapter);
         trustedWifiList.setAdapter(wifiAdapter);
 
@@ -112,6 +120,7 @@ public class MainActivity extends ActionBarActivity {
         }
         IntentFilter ifilter = new IntentFilter(Common.messageIntent);
         registerReceiver(messageReceiver, ifilter);
+
     }
 
     @Override
@@ -131,6 +140,35 @@ public class MainActivity extends ActionBarActivity {
     @Override
     public void onPause() {
         super.onPause();
+        writeDeviceFile();
+    }
+
+    private void writeDeviceFile() {
+        ArrayList<AppDevice> allTrustedDevices = new ArrayList<AppDevice>();
+        allTrustedDevices.addAll(trustedBluetoothDevices);
+        allTrustedDevices.addAll(trustedWifiNetworks);
+
+        try {
+            DeviceListLoader.writeDeviceList(allTrustedDevices, openFileOutput(Common.deviceFile, Context.MODE_PRIVATE));
+        } catch (Exception e) {
+            // nothing
+        }
+    }
+
+    private void loadDevices() {
+        try {
+            trustedBluetoothDevices = DeviceListLoader.loadDeviceList(
+                    AppDevice.DeviceType.BLUETOOTH, openFileInput(Common.deviceFile));
+            trustedWifiNetworks = DeviceListLoader.loadDeviceList(
+                    AppDevice.DeviceType.WIFI, openFileInput(Common.deviceFile));
+
+            Log.d(tag, String.format("Got %d BT devices", trustedBluetoothDevices.size()));
+            Log.d(tag, String.format("Got %d Wifi devices", trustedWifiNetworks.size()));
+        } catch (Exception e) {
+            // nothing
+        }
+
+        Log.d(tag, "loadDevices() done");
     }
 
     public class MessageReceiver extends BroadcastReceiver {
@@ -156,26 +194,37 @@ public class MainActivity extends ActionBarActivity {
 
     private void addWifiNetwork() {
         Intent i = new Intent(this, AddWifiActivity.class);
-        startActivityForResult(i, Common.addWifiRequestCode);
+        startActivityForResult(i, Common.addDeviceRequestCode);
     }
 
     private void addBluetoothDevice() {
         Intent i = new Intent(this, AddBluetoothActivity.class);
-        startActivityForResult(i, Common.addBluetoothRequestCode);
+        startActivityForResult(i, Common.addDeviceRequestCode);
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
-                case Common.addBluetoothRequestCode:
-                    String deviceAddress = data.getDataString();
-                    Log.d(tag, "received BT address: " + deviceAddress);
-                    // TODO: do something with this
-                    break;
-                case Common.addWifiRequestCode:
-                    String wifiAddress = data.getDataString();
-                    Log.d(tag, "received wifi address: " + wifiAddress);
-                    // TODO: do something with this
+                case Common.addDeviceRequestCode:
+                    AppDevice d = (AppDevice) data.getExtras().getParcelable("device");
+                    Log.d(tag, "Received deviceName: " + d.getName());
+
+                    if (d.getType() == AppDevice.DeviceType.BLUETOOTH) {
+                        if (!trustedBluetoothDevices.contains(d)) {
+                            trustedBluetoothDevices.add(d);
+                            btAdapter.notifyDataSetChanged();
+                        }
+                    }
+
+                    if (d.getType() == AppDevice.DeviceType.WIFI ) {
+                        if (!trustedWifiNetworks.contains(d)) {
+                            trustedWifiNetworks.add(d);
+                            wifiAdapter.notifyDataSetChanged();
+                        }
+                    }
+
+                    writeDeviceFile();
+                    appHelper.processChanges();
                     break;
             }
         }

@@ -95,7 +95,7 @@ public class AddWifiActivity extends ListActivity {
                     networkName = getResources().getString(R.string.wifi_hiddenNetwork);
                 }
 
-                AppDevice d = new AppDevice(AppDevice.DeviceType.WIFI, networkName, networkAddr);
+                AppDevice d = new AppDevice(AppDevice.DeviceType.WIFI, networkName, networkAddr, false, true);
                 //Log.d(tag, "Added network: " + networkName);
                 rtnList.add(d);
             }
@@ -111,7 +111,7 @@ public class AddWifiActivity extends ListActivity {
 
         // pass this device back to main activity
         Intent data = new Intent();
-        data.setData(Uri.parse(device.getAddress()));
+        data.putExtra("device", device);
         setResult(RESULT_OK, data);
         finish();
     }
