@@ -2,12 +2,7 @@ package com.raidzero.wirelessunlock;
 
 import android.app.KeyguardManager;
 import android.app.Service;
-import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
+import android.content.*;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
@@ -15,6 +10,9 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import com.raidzero.wirelessunlock.global.AppHelper;
+import com.raidzero.wirelessunlock.global.Common;
+import com.raidzero.wirelessunlock.receivers.ScreenReceiver;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -24,23 +22,25 @@ import java.util.Map;
  */
 public class LockService extends Service {
 
-    private static final String tag = "WirelessUnlock/LockService";
-    private static final String kgTag = "com.raidzero.wirelessunlock.LockService";
+    private final String tag = "WirelessUnlock/LockService";
+    private final String kgTag = "com.raidzero.wirelessunlock.LockService";
 
-    private static boolean isRunning = false;
+    private boolean isRunning = false;
+    private boolean isLockScreenEnabled = true;
 
-    private static Context context;
+    private Context context;
 
-    private static SharedPreferences sharedPreferences;
+    private SharedPreferences sharedPreferences;
+    private AppHelper appHelper;
+
+    private ArrayList<String> connectedBluetoothDevices = new ArrayList<String>();
 
     // this must be a member variable
-    private static KeyguardManager.KeyguardLock kgLock;
+    private KeyguardManager.KeyguardLock kgLock;
 
-    private static enum LockState {
+    private enum LockState {
         ENABLED, DISABLED
     }
-
-    private static ArrayList<String> connectedBluetoothDevices = new ArrayList<String>();
 
     private final IBinder myBinder = new MyLocalBinder();
 
@@ -51,7 +51,7 @@ public class LockService extends Service {
     }
 
     public class MyLocalBinder extends Binder {
-        LockService getService() {
+        public LockService getService() {
             return LockService.this;
         }
     }
@@ -62,9 +62,18 @@ public class LockService extends Service {
         Log.d(tag, "LockService created");
         this.context = getApplicationContext();
         this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        appHelper = new AppHelper();
 
         KeyguardManager keyguardManager = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
         this.kgLock = keyguardManager.newKeyguardLock(kgTag);
+
+        // register the screen receiver
+        IntentFilter screenFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+        screenFilter.addAction(Intent.ACTION_SCREEN_OFF);
+        ScreenReceiver mReceiver = new ScreenReceiver();
+        registerReceiver(mReceiver, screenFilter);
+
+        broadcastLockState();
     }
 
     @Override
@@ -73,7 +82,7 @@ public class LockService extends Service {
         return START_STICKY; // Run until explicitly stopped.
     }
 
-    public static boolean isPrefEnabled(String key) {
+    private boolean isPrefEnabled(String key) {
         boolean rtn = false;
 
         if (sharedPreferences != null) {
@@ -82,18 +91,39 @@ public class LockService extends Service {
         return rtn;
     }
 
-    public static boolean isCharging() {
+    private boolean isCharging() {
         IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = context.registerReceiver(null, ifilter);
         int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
 
-        boolean isCharging =
-                status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                        status == BatteryManager.BATTERY_STATUS_FULL;
-        return isCharging;
+        return status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                status == BatteryManager.BATTERY_STATUS_FULL;
     }
 
-    public static ArrayList<String> getTrustedDevices() {
+    public void addConnectedDevice(String address) {
+        if (!connectedBluetoothDevices.contains(address)) {
+            Log.d(tag, "Adding BT device " + address);
+            connectedBluetoothDevices.add(address);
+        }
+
+        Log.d(tag, "addConnectedDevice(): ");
+        for (String d : connectedBluetoothDevices) {
+            Log.d(tag, "device: " + d);
+        }
+    }
+
+    public void removeConnectedDevice(String address) {
+        Log.d(tag, "removeConnectedDevice(): ");
+        for (String d : connectedBluetoothDevices) {
+            Log.d(tag, "device: " + d);
+        }
+        if (connectedBluetoothDevices.contains(address)) {
+            connectedBluetoothDevices.remove(address);
+            Log.d(tag, "removed BT device " + address);
+        }
+    }
+
+    private ArrayList<String> getTrustedDevices() {
         ArrayList<String> result = new ArrayList<String>();
 
         try {
@@ -113,29 +143,39 @@ public class LockService extends Service {
         return result;
     }
 
-    private static void addConnectedDevice(String address) {
-        if (!connectedBluetoothDevices.contains(address)) {
-            connectedBluetoothDevices.add(address);
-        }
-    }
-
-    private static void removeConnectedDevice(String address) {
-        if (connectedBluetoothDevices.contains(address)) {
-            connectedBluetoothDevices.remove(address);
-        }
-    }
-
-    public static void setLockScreenState(LockState state) {
+    private void setLockScreenState(LockState state) {
         if (kgLock != null) {
             if (state == LockState.DISABLED) {
                 kgLock.disableKeyguard();
+                isLockScreenEnabled = false;
             } else if (state == LockState.ENABLED) {
                 kgLock.reenableKeyguard();
+                isLockScreenEnabled = true;
             }
+            broadcastLockState();
         }
     }
 
-    private static String getConnectedWifiAddress() {
+    private void broadcastLockState() {
+        Intent i = new Intent();
+        i.setAction(Common.messageIntent);
+
+        String dataString = "nothing to see here";
+
+        if (isLockScreenEnabled) {
+            dataString = getResources().getString(R.string.lockscreen_enabled);
+        } else {
+            dataString = getResources().getString(R.string.lockscreen_disabled);
+        }
+
+        i.putExtra("message", dataString);
+
+        sendBroadcast(i);
+
+        Log.d(tag, "broadcastLockState(): " + dataString);
+    }
+
+    private String getConnectedWifiAddress() {
         try {
             WifiManager wifiManager = (WifiManager) context.getSystemService(WIFI_SERVICE);
             WifiInfo wifiInfo = wifiManager.getConnectionInfo();
@@ -145,7 +185,7 @@ public class LockService extends Service {
         }
     }
 
-    public static void processChanges() {
+    public void processChanges() {
         ArrayList<String> allConnectedDevices = new ArrayList<String>();
 
         String currentNetworkAddr = getConnectedWifiAddress();
@@ -157,6 +197,7 @@ public class LockService extends Service {
             allConnectedDevices.add(currentNetworkAddr);
         }
 
+        Log.d(tag, "connectedBluetoothDevices: " + connectedBluetoothDevices.size());
         // now add BT
         allConnectedDevices.addAll(connectedBluetoothDevices);
 
@@ -199,46 +240,6 @@ public class LockService extends Service {
             // otherwise enable it
             Log.d(tag, String.format("Lockscreen enabled. (%s)", lockReason));
             setLockScreenState(LockState.ENABLED);
-        }
-    }
-
-    public static boolean isRunning() {
-        return isRunning;
-    }
-
-    public static class ConnectionReceiver extends BroadcastReceiver {
-
-        private final static String tag = "WirelessUnlock/ConnectionReceiver";
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-
-            final String action = intent.getAction();
-            Log.d(tag, "Receiver triggered by action: " + action);
-
-            // start service
-            if (!isRunning) {
-                context.startService(new Intent(context, LockService.class));
-                Log.d(tag, "Service started by action: " + action);
-            }
-
-            // handle bluetooth connection
-            if (action.equals(BluetoothDevice.ACTION_ACL_CONNECTED)) {
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                String deviceAddr = device.getAddress();
-
-                Log.d(tag, "Bluetooth device connected: " + deviceAddr);
-                addConnectedDevice(deviceAddr);
-
-            } else if (action.equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)) {
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                String deviceAddr = device.getAddress();
-
-                Log.d(tag, "Bluetooth device disconnected: " + deviceAddr);
-                removeConnectedDevice(deviceAddr);
-            }
-
-            processChanges();
         }
     }
 }

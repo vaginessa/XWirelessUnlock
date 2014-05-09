@@ -1,22 +1,21 @@
-package com.raidzero.wirelessunlock;
+package com.raidzero.wirelessunlock.activities;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
-import android.os.IBinder;
 import android.preference.CheckBoxPreference;
 import android.preference.PreferenceActivity;
 import android.os.Bundle;
 import android.preference.PreferenceCategory;
-import android.util.Log;
+import com.raidzero.wirelessunlock.global.AppHelper;
+import com.raidzero.wirelessunlock.global.Common;
+import com.raidzero.wirelessunlock.R;
 
 import java.util.List;
 import java.util.Set;
@@ -29,7 +28,7 @@ public class SettingsActivity extends PreferenceActivity implements
 
     private static final String tag = "WirelessUnlock/PreferenceActivity";
 
-    private static LockService lockService;
+    //private static LockService lockService;
     private boolean isBound = false;
 
     // wifi stuff
@@ -39,6 +38,8 @@ public class SettingsActivity extends PreferenceActivity implements
     PreferenceCategory btCategory = null;
     PreferenceCategory wifiCategory = null;
 
+    private AppHelper appHelper;
+    /*
     private ServiceConnection myConnection = new ServiceConnection() {
 
         public void onServiceConnected(ComponentName className,
@@ -51,40 +52,35 @@ public class SettingsActivity extends PreferenceActivity implements
         public void onServiceDisconnected(ComponentName arg0) {
             isBound = false;
         }
-    };
+    };*/
 
     protected void onResume() {
         super.onResume();
         getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
-        if (lockService != null) {
-            lockService.processChanges();
-        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        // unbind from it so it doesn't kill the service
-        unbindService(myConnection);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        appHelper = Common.getAppHelper();
         addPreferencesFromResource(R.xml.preferences);
 
-        // send intent to start service
-        if (!lockService.isRunning()) {
-            sendBroadcast(new Intent("com.raidzero.wirelessunlock.APP_STARTED"));
-        }
-        else {
-            Log.d(tag, "Service already running");
-        }
-
+        /*
         // bind to it
         Intent intent = new Intent(this, LockService.class);
         bindService(intent, myConnection, Context.BIND_AUTO_CREATE);
+        */
 
         // register wifi stuff and start scan
         wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
@@ -157,8 +153,6 @@ public class SettingsActivity extends PreferenceActivity implements
 
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         // just update
-        if (lockService != null) {
-            lockService.processChanges();
-        }
+        appHelper.processChanges();
     }
 }
