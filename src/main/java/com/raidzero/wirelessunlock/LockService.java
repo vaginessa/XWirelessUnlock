@@ -28,10 +28,10 @@ public class LockService extends Service {
     private boolean isRunning = false;
     private boolean isLockScreenEnabled = true;
 
+    private AppHelper appHelper;
     private Context context;
 
     private SharedPreferences sharedPreferences;
-    private AppHelper appHelper;
 
     private ArrayList<String> connectedBluetoothDevices = new ArrayList<String>();
 
@@ -61,8 +61,13 @@ public class LockService extends Service {
         super.onCreate();
         Log.d(tag, "LockService created");
         this.context = getApplicationContext();
+
+        //bind to myself
+        appHelper = (AppHelper) getApplicationContext();
+        Intent i = new Intent(this, LockService.class);
+        bindService(i, appHelper.getServiceConnection(), Context.BIND_AUTO_CREATE);
+
         this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        appHelper = new AppHelper();
 
         KeyguardManager keyguardManager = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
         this.kgLock = keyguardManager.newKeyguardLock(kgTag);

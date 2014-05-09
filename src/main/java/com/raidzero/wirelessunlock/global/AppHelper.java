@@ -8,6 +8,7 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.util.Log;
 import com.raidzero.wirelessunlock.LockService;
+import com.raidzero.wirelessunlock.activities.MainActivity;
 
 import java.util.ArrayList;
 
@@ -21,16 +22,6 @@ public class AppHelper extends Application {
 
     private LockService lockService;
     private boolean isBound = false;
-
-    private Context context;
-
-    public AppHelper(Context context) {
-        this.context = context;
-    }
-
-    public AppHelper() {
-
-    }
 
     private ServiceConnection myConnection = new ServiceConnection() {
 
@@ -50,17 +41,11 @@ public class AppHelper extends Application {
 
     @Override
     public void onCreate() {
+        super.onCreate();
+        Common.appHelper = this;
         Log.d(tag, "onCreate()");
-        doBind();
     }
 
-    public void doBind() {
-        if (!isBound) {
-            // bind to service
-            Intent intent = new Intent(this, LockService.class);
-            bindService(intent, myConnection, Context.BIND_AUTO_CREATE);
-        }
-    }
 
     public boolean isServiceBound() {
         return isBound;

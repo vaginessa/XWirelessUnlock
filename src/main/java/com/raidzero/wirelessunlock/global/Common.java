@@ -1,5 +1,7 @@
 package com.raidzero.wirelessunlock.global;
 
+import android.app.Activity;
+import android.content.pm.ApplicationInfo;
 import android.util.Log;
 import com.raidzero.wirelessunlock.activities.MainActivity;
 
@@ -10,6 +12,8 @@ public class Common {
     public static final String tag = "WirelessUnlock/Common";
     public static final String messageIntent = "com.raidzero.wirelessunlock.SERVICE_MESSAGE";
 
+    public static AppHelper appHelper;
+
     // activity request codes
     public static final int addWifiRequestCode = 1001;
     public static final int addBluetoothRequestCode = 1002;
@@ -19,8 +23,8 @@ public class Common {
             return MainActivity.appHelper;
         } else {
             // THIS DOES NOT WORK
-            Log.d(tag, "Activity not started, returning new appHelper");
-            return new AppHelper();
+            Log.d(tag, "appHelper is null");
+            return appHelper;
         }
     }
 }

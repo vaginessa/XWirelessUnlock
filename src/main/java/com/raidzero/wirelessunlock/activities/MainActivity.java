@@ -51,7 +51,8 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        appHelper = new AppHelper();
+        appHelper = (AppHelper) getApplicationContext();
+
         myConnection = appHelper.getServiceConnection();
 
         // bind to service
