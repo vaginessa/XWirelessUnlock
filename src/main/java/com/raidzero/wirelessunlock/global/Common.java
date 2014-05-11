@@ -10,6 +10,8 @@ public class Common {
     public static final String tag = "WirelessUnlock/Common";
     public static final String messageIntent = "com.raidzero.wirelessunlock.SERVICE_MESSAGE";
     public static final String deviceFile = "devices.txt";
+    public static final String logFile = "log.txt";
+
 
     public static AppHelper appHelper;
 

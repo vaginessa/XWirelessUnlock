@@ -10,7 +10,13 @@ import android.util.Log;
 import com.raidzero.wirelessunlock.R;
 import com.raidzero.wirelessunlock.UnlockService;
 
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -23,6 +29,8 @@ public class AppHelper extends Application {
 
     private SharedPreferences sharedPreferences;
     private ArrayList<String> connectedAddresses = new ArrayList<String>();
+
+    private DateFormat logDateFormat = new SimpleDateFormat("yyyy-MM-dd @ HH:mm:ss");
 
     @Override
     public void onCreate() {
@@ -69,6 +77,7 @@ public class AppHelper extends Application {
         if (!isServiceRunning) {
             startService(new Intent(this, UnlockService.class));
             isServiceRunning = true;
+            writeLog("Started service");
         }
         broadcastServiceState();
     }
@@ -77,6 +86,7 @@ public class AppHelper extends Application {
         if (isServiceRunning) {
             stopService(new Intent(this, UnlockService.class));
             isServiceRunning = false;
+            writeLog("Stopped service");
         }
         broadcastServiceState();
     }
@@ -140,21 +150,21 @@ public class AppHelper extends Application {
             if (connectedAddresses.contains(d)) {
                 if (isPrefEnabled("onlyWhenCharging")) {
                     if (isCharging()) {
-                        Log.d(tag, "Trusted BT device. charging");
                         startService = true;
+                        writeLog(String.format("Trusted BT device (%s). Charging. Disabling lock", d));
                         break;
                     }
                 } else {
-                    Log.d(tag, "Trusted BT device");
                     startService = true;
-                    return;
+                    writeLog(String.format("Trusted BT device (%s). Disabling lock", d));
+                    break;
                 }
             }
 
             // wifi
             if (getTrustedDevices().contains(d)) {
-                Log.d(tag, "Trusted wifi device.");
                 startService = true;
+                writeLog(String.format("Trusted wifi device (%s). Disabling lock", d));
                 break;
             }
         }
@@ -164,6 +174,25 @@ public class AppHelper extends Application {
             return;
         }
 
+        writeLog("No trusted devices found. Enabling lock");
         stopUnlockService();
+    }
+
+    public void writeLog(String msg) {
+        Date date = new Date();
+
+        try {
+            FileOutputStream fp = openFileOutput(Common.logFile, Context.MODE_APPEND);
+            OutputStreamWriter osw = new OutputStreamWriter(fp , "UTF-8");
+            BufferedWriter writer = new BufferedWriter(osw);
+
+            writer.write(logDateFormat.format(date) + ": " + msg + "\n");
+
+            writer.close();
+        } catch (Exception e) {
+            Log.d(tag, e.getMessage());
+        }
+
+        Log.d(tag, "writeLog(): " + msg);
     }
 }

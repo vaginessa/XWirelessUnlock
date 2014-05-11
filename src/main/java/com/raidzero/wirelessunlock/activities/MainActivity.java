@@ -78,6 +78,9 @@ public class MainActivity extends ActionBarActivity {
             case R.id.action_add_wifi:
                 addWifiNetwork();
                 return true;
+            case R.id.action_log:
+                openLog();
+                return true;
             case R.id.action_settings:
                 openSettings();
                 return true;
@@ -169,6 +172,11 @@ public class MainActivity extends ActionBarActivity {
                 lockStatusView.setText(lockStatus);
             }
         }
+    }
+
+    private void openLog() {
+        Intent i = new Intent(this, LogActivity.class);
+        startActivity(i);
     }
 
     private void openSettings() {
