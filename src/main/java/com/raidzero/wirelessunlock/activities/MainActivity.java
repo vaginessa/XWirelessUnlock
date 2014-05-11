@@ -140,6 +140,8 @@ public class MainActivity extends ActionBarActivity {
         } catch (Exception e) {
             // nothing
         }
+
+        appHelper.processChanges();
     }
 
     private void loadDevices() {

@@ -51,6 +51,8 @@ public class DeviceListLoader {
             reader = new BufferedReader(new InputStreamReader(stream));
             String line;
             while ((line = reader.readLine()) != null) {
+                Log.d(tag, "line: " + line);
+
                 AppDevice.DeviceType dType = null;
 
                 String[] data = line.split("\\|");
@@ -83,6 +85,8 @@ public class DeviceListLoader {
 
             String strType = (targetType == AppDevice.DeviceType.BLUETOOTH) ? "BLUETOOTH" : "WIFI";
             Log.d(tag, String.format("returning %d %s devices.", rtn.size(), strType));
+
+            stream.close();
             return rtn;
 
         } catch (Exception e) {
@@ -91,5 +95,4 @@ public class DeviceListLoader {
 
         return null;
     }
-
 }

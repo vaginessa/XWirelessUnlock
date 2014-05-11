@@ -25,6 +25,8 @@
     <string name="settings_wifiDevicesTitle">Select trusted WiFi Network(s)</string>
     <string name="wifi_scanning">Scanning for WiFi networks&#8230;</string>
     <string name="wifi_hiddenNetwork">**Hidden SSID**</string>
+    <string name="settings_notificationsTitle">Notifications</string>
+    <string name="settings_notificationsSummary">Display an ongoing notification when lock screen is disabled</string>
 
     <!-- device settings -->
     <string name="settings_onlyWhenCharging_title">Charging Only</string>
@@ -39,5 +41,9 @@
     <string name="bluetooth_no_devices">No devices found. Make sure bluetooth is enabled and
     you have paired device(s).</string>
     <string name="no_devices_found">No devices found</string>
+
+    <string name="service_notification_id">com.raidzero.wirelessunlock.UnlockService.Notification</string>
+    <string name="service_notificationTitle">Service Active</string>
+    <string name="service_notificationText">Lock screen disabled</string>
 
 </resources>
