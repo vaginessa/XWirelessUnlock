@@ -13,6 +13,24 @@
         android:layout_height="wrap_content"
         android:textSize="20sp"
         android:text="Lockscreen Status"
+        android:padding="3dp"
+        android:layout_gravity="center_horizontal"
+        />
+
+    <View android:id="@+id/separator"
+          android:background="@color/separatorColor"
+          android:layout_width = "fill_parent"
+          android:layout_height="1dip"
+          android:layout_centerVertical ="true"
+          android:layout_alignParentTop="true"/>
+
+    <TextView
+        android:id="@+id/textView_tap_to_configre"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:padding="10dp"
+        android:text="@string/main_tap_to_configure"
         android:layout_gravity="center_horizontal"
         />
 
@@ -27,7 +45,7 @@
         android:paddingBottom="10dp"
         />
 
-    <View android:id="@+id/separator"
+    <View android:id="@id/separator"
           android:background="@color/separatorColor"
           android:layout_width = "fill_parent"
           android:layout_height="1dip"
@@ -37,9 +55,7 @@
     <ListView
         android:id="@+id/list_trusted_bluetooth_devices"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-    </ListView>
+        android:layout_height="wrap_content"/>
 
     <TextView
         android:id="@+id/textView_WifiLabel"
@@ -49,8 +65,7 @@
         android:textStyle="bold"
         android:layout_gravity="left"
         android:paddingTop="10dp"
-        android:paddingBottom="10dp"
-        />
+        android:paddingBottom="10dp"/>
 
     <View android:id="@id/separator"
           android:background="@color/separatorColor"

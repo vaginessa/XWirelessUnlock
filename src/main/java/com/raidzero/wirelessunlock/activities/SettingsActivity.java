@@ -28,9 +28,6 @@ public class SettingsActivity extends PreferenceActivity implements
 
     private static final String tag = "WirelessUnlock/PreferenceActivity";
 
-    //private static LockService lockService;
-    private boolean isBound = false;
-
     // wifi stuff
     private WifiManager wifiManager = null;
     private List<ScanResult> scanResults = null;
@@ -39,20 +36,6 @@ public class SettingsActivity extends PreferenceActivity implements
     PreferenceCategory wifiCategory = null;
 
     private AppHelper appHelper;
-    /*
-    private ServiceConnection myConnection = new ServiceConnection() {
-
-        public void onServiceConnected(ComponentName className,
-                                       IBinder service) {
-            LockService.MyLocalBinder binder = (LockService.MyLocalBinder) service;
-            lockService = binder.getService();
-            isBound = true;
-        }
-
-        public void onServiceDisconnected(ComponentName arg0) {
-            isBound = false;
-        }
-    };*/
 
     protected void onResume() {
         super.onResume();
@@ -75,12 +58,6 @@ public class SettingsActivity extends PreferenceActivity implements
 
         appHelper = Common.getAppHelper();
         addPreferencesFromResource(R.xml.preferences);
-
-        /*
-        // bind to it
-        Intent intent = new Intent(this, LockService.class);
-        bindService(intent, myConnection, Context.BIND_AUTO_CREATE);
-        */
 
         // register wifi stuff and start scan
         wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);

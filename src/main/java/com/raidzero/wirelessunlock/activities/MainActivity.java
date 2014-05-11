@@ -2,12 +2,13 @@ package com.raidzero.wirelessunlock.activities;
 
 import android.content.*;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 import com.raidzero.wirelessunlock.*;
@@ -18,7 +19,6 @@ import com.raidzero.wirelessunlock.global.Common;
 import com.raidzero.wirelessunlock.global.DeviceListLoader;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 /**
  * Created by raidzero on 5/7/14 7:51 PM
@@ -27,13 +27,9 @@ public class MainActivity extends ActionBarActivity {
 
     private static final String tag = "WirelessUnlock/MainActivity";
 
-    private SharedPreferences sharedPreferences;
     public static AppHelper appHelper;
 
-    public static LockService lockService;
     private MessageReceiver messageReceiver;
-
-    public ServiceConnection myConnection;
 
     // views
     private static TextView lockStatusView = null;
@@ -56,24 +52,12 @@ public class MainActivity extends ActionBarActivity {
 
         appHelper = (AppHelper) getApplicationContext();
 
-        myConnection = appHelper.getServiceConnection();
-
-        // bind to service
-        Intent intent = new Intent(this, LockService.class);
-        bindService(intent, myConnection, Context.BIND_AUTO_CREATE);
-
-        sendBroadcast(new Intent("com.raidzero.wirelessunlock.APP_STARTED"));
-
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
         lockStatusView = (TextView) findViewById(R.id.textView_lockStatus);
 
         trustedBluetoothList = (ListView) findViewById(R.id.list_trusted_bluetooth_devices);
         trustedWifiList = (ListView) findViewById(R.id.list_trusted_wifi_devices);
 
         loadDevices();
-
-        appHelper.processChanges();
     }
 
     @Override
@@ -114,6 +98,9 @@ public class MainActivity extends ActionBarActivity {
         trustedBluetoothList.setAdapter(btAdapter);
         trustedWifiList.setAdapter(wifiAdapter);
 
+        trustedBluetoothList.setOnItemClickListener(bluetoothClickListener);
+        trustedWifiList.setOnItemClickListener(wifiClickListener);
+
         // register message receiver if not already
         if (messageReceiver == null) {
             messageReceiver = new MessageReceiver();
@@ -121,15 +108,12 @@ public class MainActivity extends ActionBarActivity {
         IntentFilter ifilter = new IntentFilter(Common.messageIntent);
         registerReceiver(messageReceiver, ifilter);
 
+        appHelper.processChanges();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        if (appHelper.isServiceBound()) {
-            unbindService(myConnection);
-        }
 
         // unregister message receiver
         if (messageReceiver != null) {
@@ -224,9 +208,39 @@ public class MainActivity extends ActionBarActivity {
                     }
 
                     writeDeviceFile();
-                    appHelper.processChanges();
+                    //appHelper.processChanges();
                     break;
             }
         }
     }
+
+    // click listeners
+    AdapterView.OnItemClickListener wifiClickListener = new AdapterView.OnItemClickListener()
+    {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+        {
+            Log.d(tag, "clickListener fired on " + position);
+            AppDevice d = trustedWifiNetworks.get(position);
+
+            Intent i = new Intent(getApplicationContext(), DeviceSettingsActivity.class);
+            i.putExtra("device", d);
+            startActivity(i);
+        }
+    };
+
+    AdapterView.OnItemClickListener bluetoothClickListener = new AdapterView.OnItemClickListener()
+    {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+        {
+            Log.d(tag, "clickListener fired on " + position);
+            AppDevice d = trustedBluetoothDevices.get(position);
+
+            Intent i = new Intent(getApplicationContext(), DeviceSettingsActivity.class);
+            i.putExtra("device", d);
+            startActivity(i);
+        }
+    };
+
 }

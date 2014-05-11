@@ -37,17 +37,21 @@ public class DeviceListAdapter extends ArrayAdapter<AppDevice> {
         // get the views
         TextView txtName = (TextView) convertView.findViewById(R.id.txt_deviceName);
         TextView txtAddr = (TextView) convertView.findViewById(R.id.txt_deviceAddr);
+
         CheckBox chkBox = (CheckBox) convertView.findViewById(R.id.chk_deviceEnable);
 
         // set their values
         txtName.setText(d.getName());
         txtAddr.setText(d.getAddress());
-        chkBox.setChecked(d.getEnabled());
 
-        if (!enableCheckbox) {
+
+        //chkBox.setChecked(d.getEnabled());
+
+        //if (!enableCheckbox) {
             // hide checkbox
             chkBox.setVisibility(View.GONE);
-        }
+        //}
+
 
         // return completed view
         return convertView;
