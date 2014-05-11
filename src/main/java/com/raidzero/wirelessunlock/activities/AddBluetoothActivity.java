@@ -1,8 +1,10 @@
 package com.raidzero.wirelessunlock.activities;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -42,10 +44,20 @@ public class AddBluetoothActivity extends ListActivity {
             list_devices.setAdapter(adapter);
         } else {
             // display no paired devices found
-            setContentView(R.layout.no_devices_found);
-            TextView txt_noDevices = (TextView) findViewById(R.id.txt_noDevicesFound);
-            txt_noDevices.setText(getResources().getString(R.string.bluetooth_no_devices));
+            noDevicesFound();
         }
+    }
+
+    private void noDevicesFound() {
+        AlertDialog.Builder alert=new AlertDialog.Builder(this);
+        alert.setMessage(getResources().getString(R.string.bluetooth_no_devices));
+        alert.setTitle("Error");
+        alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        finish();
+                    }
+                });
+        alert.create().show();
     }
 
     private ArrayList<AppDevice> getPairedDevices() {
