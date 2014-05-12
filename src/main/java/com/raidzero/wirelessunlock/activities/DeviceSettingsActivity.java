@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -55,6 +56,17 @@ public class DeviceSettingsActivity extends Activity {
                 finish();
             }
 
+        });
+
+        button_remove.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent rtn = new Intent();
+                rtn.putExtra("remove", true);
+                rtn.putExtra("device", d);
+                setResult(RESULT_OK, rtn);
+                finish();
+            }
         });
     }
 }

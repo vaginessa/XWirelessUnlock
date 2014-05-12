@@ -43,11 +43,8 @@ public class AppDelegate extends Application {
     private boolean notificationDisplayed = false;
     private Bitmap largeIcon;
 
-
-    // receivers
-    private BluetoothReceiver bluetoothReceiver = null;
-    private WifiReceiver wifiReceiver = null;
-    private PowerReceiver powerReceiver = null;
+    private ArrayList<AppDevice> trustedBluetoothDevices = new ArrayList<AppDevice>();
+    private ArrayList<AppDevice> trustedWifiNetworks = new ArrayList<AppDevice>();
 
     @Override
     public void onCreate() {
@@ -61,10 +58,83 @@ public class AppDelegate extends Application {
         this.largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
     }
 
+    public ArrayList<AppDevice> getTrustedBluetoothDevices() {
+        return trustedBluetoothDevices;
+    }
+
+    public ArrayList<AppDevice> getTrustedWifiNetworks() {
+        return trustedWifiNetworks;
+    }
+
+    public void removeTrustedDevice(AppDevice device) {
+        ArrayList<AppDevice> list =
+                (device.getType() == AppDevice.DeviceType.BLUETOOTH) ?
+                        trustedBluetoothDevices : trustedWifiNetworks;
+
+        removeFromList(list, device.getAddress());
+
+        broadcastDeviceChange();
+    }
+
+    public void addTrustedDevice(AppDevice newDevice) {
+        ArrayList<AppDevice> list =
+                (newDevice.getType() == AppDevice.DeviceType.BLUETOOTH) ?
+                        trustedBluetoothDevices : trustedWifiNetworks;
+
+        if (!addressExists(list, newDevice.getAddress())) {
+            list.add(newDevice);
+        }
+
+        broadcastDeviceChange();
+    }
+
+    private void removeFromList(ArrayList<AppDevice> list, String address) {
+        int i = 0;
+        boolean found = false;
+
+        for (AppDevice d : list) {
+            if (d.getAddress().equals(address)) {
+                found = true;
+                break;
+            }
+            i++;
+        }
+
+        if (found) {
+            list.remove(i);
+        }
+    }
+
+    private boolean addressExists(ArrayList<AppDevice> list, String address) {
+        for (AppDevice d : list) {
+            if (d.getAddress().equals(address)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public void updateTrustedDevice(String address, AppDevice newDevice) {
+
+        ArrayList<AppDevice> devices = new ArrayList<AppDevice>();
+
+        AppDevice.DeviceType type = newDevice.getType();
+
+        AppDevice oldDevice = getDeviceFromAddress(type, address);
+
+        removeTrustedDevice(oldDevice);
+        addTrustedDevice(newDevice);
+
+        broadcastDeviceChange();
+        writeDeviceFile();
+    }
+
     public void addConnectedAddress(String address) {
         if (!connectedAddresses.contains(address)) {
             connectedAddresses.add(address);
         }
+
     }
 
     public void removeConnectedAddress(String address) {
@@ -73,7 +143,7 @@ public class AppDelegate extends Application {
         }
     }
 
-    public void startUnlockService(String reason) {
+    public synchronized void startUnlockService(String reason) {
         if (!isServiceRunning) {
             startService(new Intent(this, UnlockService.class));
             isServiceRunning = true;
@@ -83,7 +153,7 @@ public class AppDelegate extends Application {
         broadcastServiceState();
     }
 
-    public void stopUnlockService(String reason) {
+    public synchronized void stopUnlockService(String reason) {
         if (isServiceRunning) {
             stopService(new Intent(this, UnlockService.class));
             isServiceRunning = false;
@@ -95,7 +165,7 @@ public class AppDelegate extends Application {
 
     public void broadcastServiceState() {
         Intent i = new Intent();
-        i.setAction(Common.messageIntent);
+        i.setAction(Common.messageIntentAction);
 
         String data;
 
@@ -106,6 +176,18 @@ public class AppDelegate extends Application {
         }
 
         i.putExtra("message", data);
+        sendBroadcast(i);
+    }
+
+    public void broadcastDeviceChange() {
+        writeDeviceFile();
+
+        Intent i = new Intent();
+        i.setAction(Common.refreshDevicesIntentAction);
+
+        i.putExtra("bluetoothDevices", trustedBluetoothDevices);
+        i.putExtra("wifiNetworks", trustedWifiNetworks);
+
         sendBroadcast(i);
     }
 
@@ -296,5 +378,35 @@ public class AppDelegate extends Application {
                 notificationDisplayed = true;
             }
         }
+    }
+
+    public void writeDeviceFile() {
+        ArrayList<AppDevice> allTrustedDevices = new ArrayList<AppDevice>();
+        allTrustedDevices.addAll(trustedBluetoothDevices);
+        allTrustedDevices.addAll(trustedWifiNetworks);
+
+        try {
+            DeviceListLoader.writeDeviceList(allTrustedDevices, openFileOutput(Common.deviceFile, Context.MODE_PRIVATE));
+        } catch (Exception e) {
+            // nothing
+        }
+
+        processChanges();
+    }
+
+    public void loadDevices() {
+        try {
+            trustedBluetoothDevices = DeviceListLoader.loadDeviceList(
+                    AppDevice.DeviceType.BLUETOOTH, openFileInput(Common.deviceFile));
+            trustedWifiNetworks = DeviceListLoader.loadDeviceList(
+                    AppDevice.DeviceType.WIFI, openFileInput(Common.deviceFile));
+
+            Log.d(tag, String.format("Got %d BT devices", trustedBluetoothDevices.size()));
+            Log.d(tag, String.format("Got %d Wifi devices", trustedWifiNetworks.size()));
+        } catch (Exception e) {
+            // nothing
+        }
+
+        Log.d(tag, "loadDevices() done");
     }
 }

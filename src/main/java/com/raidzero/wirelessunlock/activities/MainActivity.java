@@ -30,6 +30,7 @@ public class MainActivity extends ActionBarActivity {
     public static AppDelegate appDelegate;
 
     private MessageReceiver messageReceiver;
+    private RefreshDevicesReceiver refreshDevicesReceiver;
 
     // views
     private static TextView lockStatusView = null;
@@ -57,7 +58,7 @@ public class MainActivity extends ActionBarActivity {
         trustedBluetoothList = (ListView) findViewById(R.id.list_trusted_bluetooth_devices);
         trustedWifiList = (ListView) findViewById(R.id.list_trusted_wifi_devices);
 
-        loadDevices();
+        appDelegate.loadDevices();
     }
 
     @Override
@@ -73,10 +74,10 @@ public class MainActivity extends ActionBarActivity {
         // Handle presses on the action bar items
         switch (item.getItemId()) {
             case R.id.action_add_bluetooth:
-                addBluetoothDevice();
+                startAddBluetoothDevice();
                 return true;
             case R.id.action_add_wifi:
-                addWifiNetwork();
+                startAddWifiNetwork();
                 return true;
             case R.id.action_log:
                 openLog();
@@ -93,10 +94,13 @@ public class MainActivity extends ActionBarActivity {
     public void onResume() {
         super.onResume();
 
-        btAdapter = new DeviceListAdapter(this, trustedBluetoothDevices, true);
-        wifiAdapter = new DeviceListAdapter(this, trustedWifiNetworks, true);
+        trustedBluetoothDevices = appDelegate.getTrustedBluetoothDevices();
+        trustedWifiNetworks = appDelegate.getTrustedWifiNetworks();
 
-        loadDevices();
+        btAdapter = new DeviceListAdapter(this, appDelegate.getTrustedBluetoothDevices(), true);
+        wifiAdapter = new DeviceListAdapter(this, appDelegate.getTrustedWifiNetworks(), true);
+
+        appDelegate.loadDevices();
 
         trustedBluetoothList.setAdapter(btAdapter);
         trustedWifiList.setAdapter(wifiAdapter);
@@ -114,8 +118,15 @@ public class MainActivity extends ActionBarActivity {
             if (messageReceiver == null) {
                 messageReceiver = new MessageReceiver();
             }
-            IntentFilter ifilter = new IntentFilter(Common.messageIntent);
-            registerReceiver(messageReceiver, ifilter);
+            IntentFilter messageIntentFilter = new IntentFilter(Common.messageIntentAction);
+            registerReceiver(messageReceiver, messageIntentFilter);
+
+            // register deviceRefreshReceiver
+            if (refreshDevicesReceiver == null) {
+                refreshDevicesReceiver = new RefreshDevicesReceiver();
+                IntentFilter refreshIntentFilter = new IntentFilter(Common.refreshDevicesIntentAction);
+                registerReceiver(refreshDevicesReceiver, refreshIntentFilter);
+            }
 
             appDelegate.processChanges();
         }
@@ -134,53 +145,7 @@ public class MainActivity extends ActionBarActivity {
     @Override
     public void onPause() {
         super.onPause();
-        writeDeviceFile();
-    }
-
-    private void writeDeviceFile() {
-        ArrayList<AppDevice> allTrustedDevices = new ArrayList<AppDevice>();
-        allTrustedDevices.addAll(trustedBluetoothDevices);
-        allTrustedDevices.addAll(trustedWifiNetworks);
-
-        try {
-            DeviceListLoader.writeDeviceList(allTrustedDevices, openFileOutput(Common.deviceFile, Context.MODE_PRIVATE));
-        } catch (Exception e) {
-            // nothing
-        }
-
-        appDelegate.processChanges();
-    }
-
-    private void loadDevices() {
-        try {
-            trustedBluetoothDevices = DeviceListLoader.loadDeviceList(
-                    AppDevice.DeviceType.BLUETOOTH, openFileInput(Common.deviceFile));
-            trustedWifiNetworks = DeviceListLoader.loadDeviceList(
-                    AppDevice.DeviceType.WIFI, openFileInput(Common.deviceFile));
-
-            Log.d(tag, String.format("Got %d BT devices", trustedBluetoothDevices.size()));
-            Log.d(tag, String.format("Got %d Wifi devices", trustedWifiNetworks.size()));
-        } catch (Exception e) {
-            // nothing
-        }
-
-        Log.d(tag, "loadDevices() done");
-    }
-
-    public class MessageReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d(tag, "MessageReceiver!");
-
-            String lockStatus = intent.getStringExtra("message");
-
-            Log.d(tag, "lockStatus: " + lockStatus);
-
-            if (lockStatus != null) {
-                lockStatusView.setText(lockStatus);
-            }
-        }
+        appDelegate.writeDeviceFile();
     }
 
     private void openLog() {
@@ -193,12 +158,12 @@ public class MainActivity extends ActionBarActivity {
         startActivity(i);
     }
 
-    private void addWifiNetwork() {
+    private void startAddWifiNetwork() {
         Intent i = new Intent(this, AddWifiActivity.class);
         startActivityForResult(i, Common.addDeviceRequestCode);
     }
 
-    private void addBluetoothDevice() {
+    private void startAddBluetoothDevice() {
         Intent i = new Intent(this, AddBluetoothActivity.class);
         startActivityForResult(i, Common.addDeviceRequestCode);
     }
@@ -209,62 +174,19 @@ public class MainActivity extends ActionBarActivity {
             switch (requestCode) {
                 case Common.addDeviceRequestCode:
                     d = data.getExtras().getParcelable("device");
-                    processDeviceChange(d.getAddress(), d, false);
+                    appDelegate.addTrustedDevice(d);
                     break;
                 case Common.deviceChangeRequestCode:
                     d = data.getExtras().getParcelable("device");
-                    boolean replace = data.getBooleanExtra("replace", true);
-                    processDeviceChange(d.getAddress(), d, replace);
-            }
-        }
-    }
-
-    private void processDeviceChange(String address, AppDevice newDevice, boolean replace) {
-        AppDevice deviceToRemove = null;
-
-        if (newDevice.getType() == AppDevice.DeviceType.BLUETOOTH) {
-            if (replace) {
-                for (AppDevice device : trustedBluetoothDevices) {
-                    if (device.getAddress().equals(address)) {
-                        deviceToRemove = device;
-                        break;
+                    boolean remove = data.getBooleanExtra("remove", false);
+                    if (remove) {
+                        appDelegate.removeTrustedDevice(d);
+                    } else {
+                        appDelegate.updateTrustedDevice(d.getAddress(), d);
                     }
-                }
-
-                if (deviceToRemove != null) {
-                    trustedBluetoothDevices.remove(deviceToRemove);
-                }
-            }
-            if (newDevice.getAddress() != null) {
-                if (!trustedBluetoothDevices.contains(newDevice)) {
-                    trustedBluetoothDevices.add(newDevice);
-                    btAdapter.notifyDataSetChanged();
-                }
+                    break;
             }
         }
-
-        if (newDevice.getType() == AppDevice.DeviceType.WIFI ) {
-            if (replace) {
-                for (AppDevice device : trustedWifiNetworks) {
-                    if (device.getAddress().equals(address)) {
-                        deviceToRemove = device;
-                        break;
-                    }
-                }
-                if (deviceToRemove != null) {
-                    trustedWifiNetworks.remove(deviceToRemove);
-                }
-            }
-
-            if (newDevice.getAddress() != null) {
-                if (!trustedWifiNetworks.contains(newDevice)) {
-                    trustedWifiNetworks.add(newDevice);
-                    wifiAdapter.notifyDataSetChanged();
-                }
-            }
-        }
-
-        writeDeviceFile();
     }
 
     // click listeners
@@ -296,4 +218,33 @@ public class MainActivity extends ActionBarActivity {
         }
     };
 
+    // broadcast receivers
+    public class MessageReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(tag, "MessageReceiver!");
+
+            String lockStatus = intent.getStringExtra("message");
+
+            Log.d(tag, "lockStatus: " + lockStatus);
+
+            if (lockStatus != null) {
+                lockStatusView.setText(lockStatus);
+            }
+        }
+    }
+
+    public class RefreshDevicesReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(tag, "RefreshDevicesReceiver!");
+
+            trustedBluetoothDevices = appDelegate.getTrustedBluetoothDevices();
+            trustedWifiNetworks = appDelegate.getTrustedWifiNetworks();
+
+            btAdapter.notifyDataSetChanged();
+            wifiAdapter.notifyDataSetChanged();
+        }
+    }
 }
