@@ -7,4 +7,10 @@
         android:summary="@string/settings_notificationsSummary"
         android:defaultValue="false"
     />
+    <CheckBoxPreference
+        android:key="enableApp"
+        android:title="@string/settings_enableAppTitle"
+        android:summary="@string/settings_enableAppSummary"
+        android:defaultValue="true"
+        />
 </PreferenceScreen>

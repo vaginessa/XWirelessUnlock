@@ -27,11 +27,14 @@
     <string name="wifi_hiddenNetwork">**Hidden SSID**</string>
     <string name="settings_notificationsTitle">Notifications</string>
     <string name="settings_notificationsSummary">Display an ongoing notification when lock screen is disabled</string>
+    <string name="settings_enableAppTitle">Enable lock screen control</string>
+    <string name="settings_enableAppSummary">Enable or disable automatic lock screen control</string>
 
     <!-- device settings -->
     <string name="settings_onlyWhenCharging_title">Charging Only</string>
     <string name="settings_onlyWhenCharging_summary">Only activate when device is plugged in</string>
     <string name="device_settings_label">Device Preferences</string>
+    <string name="device_settings_remove">Remove</string>
 
     <!-- wifi selector -->
     <string name="wifi_select_network">Select a WiFi network</string>

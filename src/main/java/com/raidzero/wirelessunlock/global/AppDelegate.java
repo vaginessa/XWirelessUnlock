@@ -25,8 +25,8 @@ import java.util.Date;
 /**
  * Created by raidzero on 5/8/14 2:18 PM
  */
-public class AppHelper extends Application {
-    private static final String tag = "WirelessUnlock/AppHelper";
+public class AppDelegate extends Application {
+    private static final String tag = "WirelessUnlock/AppDelegate";
 
     private boolean isServiceRunning = false;
 
@@ -44,7 +44,7 @@ public class AppHelper extends Application {
         super.onCreate();
         Log.d(tag, "onCreate()");
 
-        Common.appHelper = this;
+        Common.appDelegate = this;
         this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         this.notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -62,30 +62,6 @@ public class AppHelper extends Application {
             connectedAddresses.remove(address);
         }
     }
-
-    /*
-    private ArrayList<String> getTrustedDevices() {
-        ArrayList<String> result = new ArrayList<String>();
-
-        try {
-            Map<String, ?> keys = sharedPreferences.getAll();
-
-            for (Map.Entry<String, ?> entry : keys.entrySet()) {
-                String keyName = entry.getKey();
-
-                if (isPrefEnabled(keyName)) {
-                    result.add(keyName);
-                }
-            }
-        } catch (Exception e) {
-            return result; // its empty
-        }
-
-        return result;
-    }
-    */
-
-
 
     public void startUnlockService(String reason) {
         if (!isServiceRunning) {
@@ -220,35 +196,36 @@ public class AppHelper extends Application {
         String reason = "";
 
         for (String d : connectedDevices) {
-            // bluetooth?
-            if (connectedAddresses.contains(d)) {
-                if (isAddressTrusted(d)) {
-                    AppDevice device = getDeviceFromAddress(AppDevice.DeviceType.BLUETOOTH, d);
-                    if (device.getChargingOnly()) {
-                        if (isCharging()) {
-                            reason = String.format("BT Device (%s) trusted & plugged in.", device.getName());
-                            startService = true;
-                            break;
-                        }
-                        else {
-                            reason = String.format("BT Device (%s) trusted but not plugged in.", device.getName());
-                            startService = false;
-                            break;
-                        }
-                    } else {
-                        reason = "BT device (%s) trusted.";
+
+            if (isAddressTrusted(d)) {
+                AppDevice device = null;
+                String deviceType;
+
+                // bluetooth?
+                if (connectedAddresses.contains(d)) {
+                    device = getDeviceFromAddress(AppDevice.DeviceType.BLUETOOTH, d);
+                    deviceType = "BT device";
+                } else {
+                    // must be wifi
+                    device = getDeviceFromAddress(AppDevice.DeviceType.WIFI, d);
+                    deviceType = "WiFi network";
+                }
+
+                if (device.getChargingOnly()) {
+                    if (isCharging()) {
+                        reason = String.format("%s (%s) trusted & plugged in.", deviceType, device.getName());
                         startService = true;
                         break;
+                    } else {
+                        reason = String.format("%s (%s) trusted but not plugged in.", deviceType, device.getName());
+                        startService = false;
+                        break;
                     }
+                } else {
+                    reason = String.format("%s (%s) trusted.", deviceType, device.getName());
+                    startService = true;
+                    break;
                 }
-            }
-
-            // wifi
-            if (isAddressTrusted(d)) {
-                AppDevice device = getDeviceFromAddress(AppDevice.DeviceType.WIFI, d);
-                reason = String.format("Wifi network (%s) trusted.", device.getName());
-                startService = true;
-                break;
             }
         }
 

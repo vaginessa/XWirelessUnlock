@@ -1,6 +1,5 @@
 package com.raidzero.wirelessunlock.global;
 
-import android.util.Log;
 import com.raidzero.wirelessunlock.activities.MainActivity;
 
 /**
@@ -13,16 +12,17 @@ public class Common {
     public static final String logFile = "log.txt";
 
 
-    public static AppHelper appHelper;
+    public static AppDelegate appDelegate;
 
     // activity request codes
     public static final int addDeviceRequestCode = 1000;
+    public static final int deviceChangeRequestCode = 1001;
 
-    public static AppHelper getAppHelper() {
-        if (MainActivity.appHelper != null) {
-            return MainActivity.appHelper;
+    public static AppDelegate getAppDelegate() {
+        if (MainActivity.appDelegate != null) {
+            return MainActivity.appDelegate;
         } else {
-            return appHelper;
+            return appDelegate;
         }
     }
 }

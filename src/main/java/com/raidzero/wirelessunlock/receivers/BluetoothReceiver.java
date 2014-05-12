@@ -5,7 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
-import com.raidzero.wirelessunlock.global.AppHelper;
+import com.raidzero.wirelessunlock.global.AppDelegate;
 import com.raidzero.wirelessunlock.global.Common;
 
 /**
@@ -14,7 +14,7 @@ import com.raidzero.wirelessunlock.global.Common;
 public class BluetoothReceiver extends BroadcastReceiver {
     private static final String tag = "WirelessUnlock/BluetoothReceiver";
 
-    AppHelper appHelper = Common.getAppHelper();
+    AppDelegate appDelegate = Common.getAppDelegate();
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -25,16 +25,16 @@ public class BluetoothReceiver extends BroadcastReceiver {
             String deviceAddr = device.getAddress();
 
             Log.d(tag, "Bluetooth device connected: " + deviceAddr);
-            appHelper.addConnectedAddress(deviceAddr);
+            appDelegate.addConnectedAddress(deviceAddr);
 
         } else if (action.equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)) {
             BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
             String deviceAddr = device.getAddress();
 
             Log.d(tag, "Bluetooth device disconnected: " + deviceAddr);
-            appHelper.removeConnectedAddress(deviceAddr);
+            appDelegate.removeConnectedAddress(deviceAddr);
         }
 
-        appHelper.processChanges();
+        appDelegate.processChanges();
     }
 }

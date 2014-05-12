@@ -4,7 +4,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceActivity;
 import android.os.Bundle;
 import android.util.Log;
-import com.raidzero.wirelessunlock.global.AppHelper;
+import com.raidzero.wirelessunlock.global.AppDelegate;
 import com.raidzero.wirelessunlock.global.Common;
 import com.raidzero.wirelessunlock.R;
 
@@ -15,13 +15,13 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
     private static final String tag = "WirelessUnlock/PreferenceActivity";
 
-    private AppHelper appHelper;
+    private AppDelegate appDelegate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);
-        this.appHelper = Common.getAppHelper();
+        this.appDelegate = Common.getAppDelegate();
     }
 
     protected void onResume() {
@@ -35,10 +35,10 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         if (key.equals("showNotifications")) {
             if (sharedPreferences.getBoolean(key, false)) {
                 Log.d(tag, "enabled notifications");
-                appHelper.showNotification();
+                appDelegate.showNotification();
             } else {
                 Log.d(tag, "disabled notifications");
-                appHelper.dismissNotification();
+                appDelegate.dismissNotification();
             }
         }
     }

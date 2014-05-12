@@ -25,7 +25,7 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        android:name=".global.AppHelper">
+        android:name=".global.AppDelegate">
 
         <activity
             android:name=".activities.MainActivity"

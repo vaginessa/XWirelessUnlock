@@ -14,7 +14,7 @@ import android.widget.TextView;
 import com.raidzero.wirelessunlock.*;
 import com.raidzero.wirelessunlock.adapters.DeviceListAdapter;
 import com.raidzero.wirelessunlock.global.AppDevice;
-import com.raidzero.wirelessunlock.global.AppHelper;
+import com.raidzero.wirelessunlock.global.AppDelegate;
 import com.raidzero.wirelessunlock.global.Common;
 import com.raidzero.wirelessunlock.global.DeviceListLoader;
 
@@ -27,7 +27,7 @@ public class MainActivity extends ActionBarActivity {
 
     private static final String tag = "WirelessUnlock/MainActivity";
 
-    public static AppHelper appHelper;
+    public static AppDelegate appDelegate;
 
     private MessageReceiver messageReceiver;
 
@@ -50,7 +50,7 @@ public class MainActivity extends ActionBarActivity {
 
         setContentView(R.layout.main);
 
-        appHelper = (AppHelper) getApplicationContext();
+        appDelegate = (AppDelegate) getApplicationContext();
 
         lockStatusView = (TextView) findViewById(R.id.textView_lockStatus);
 
@@ -111,7 +111,7 @@ public class MainActivity extends ActionBarActivity {
         IntentFilter ifilter = new IntentFilter(Common.messageIntent);
         registerReceiver(messageReceiver, ifilter);
 
-        appHelper.processChanges();
+        appDelegate.processChanges();
     }
 
     @Override
@@ -141,7 +141,7 @@ public class MainActivity extends ActionBarActivity {
             // nothing
         }
 
-        appHelper.processChanges();
+        appDelegate.processChanges();
     }
 
     private void loadDevices() {
@@ -197,31 +197,67 @@ public class MainActivity extends ActionBarActivity {
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        AppDevice d;
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
                 case Common.addDeviceRequestCode:
-                    AppDevice d = (AppDevice) data.getExtras().getParcelable("device");
-                    Log.d(tag, "Received deviceName: " + d.getName());
-
-                    if (d.getType() == AppDevice.DeviceType.BLUETOOTH) {
-                        if (!trustedBluetoothDevices.contains(d)) {
-                            trustedBluetoothDevices.add(d);
-                            btAdapter.notifyDataSetChanged();
-                        }
-                    }
-
-                    if (d.getType() == AppDevice.DeviceType.WIFI ) {
-                        if (!trustedWifiNetworks.contains(d)) {
-                            trustedWifiNetworks.add(d);
-                            wifiAdapter.notifyDataSetChanged();
-                        }
-                    }
-
-                    writeDeviceFile();
-                    //appHelper.processChanges();
+                    d = data.getExtras().getParcelable("device");
+                    processDeviceChange(d.getAddress(), d, false);
                     break;
+                case Common.deviceChangeRequestCode:
+                    d = data.getExtras().getParcelable("device");
+                    boolean replace = data.getBooleanExtra("replace", true);
+                    processDeviceChange(d.getAddress(), d, replace);
             }
         }
+    }
+
+    private void processDeviceChange(String address, AppDevice newDevice, boolean replace) {
+        AppDevice deviceToRemove = null;
+
+        if (newDevice.getType() == AppDevice.DeviceType.BLUETOOTH) {
+            if (replace) {
+                for (AppDevice device : trustedBluetoothDevices) {
+                    if (device.getAddress().equals(address)) {
+                        deviceToRemove = device;
+                        break;
+                    }
+                }
+
+                if (deviceToRemove != null) {
+                    trustedBluetoothDevices.remove(deviceToRemove);
+                }
+            }
+            if (newDevice.getAddress() != null) {
+                if (!trustedBluetoothDevices.contains(newDevice)) {
+                    trustedBluetoothDevices.add(newDevice);
+                    btAdapter.notifyDataSetChanged();
+                }
+            }
+        }
+
+        if (newDevice.getType() == AppDevice.DeviceType.WIFI ) {
+            if (replace) {
+                for (AppDevice device : trustedWifiNetworks) {
+                    if (device.getAddress().equals(address)) {
+                        deviceToRemove = device;
+                        break;
+                    }
+                }
+                if (deviceToRemove != null) {
+                    trustedWifiNetworks.remove(deviceToRemove);
+                }
+            }
+
+            if (newDevice.getAddress() != null) {
+                if (!trustedWifiNetworks.contains(newDevice)) {
+                    trustedWifiNetworks.add(newDevice);
+                    wifiAdapter.notifyDataSetChanged();
+                }
+            }
+        }
+
+        writeDeviceFile();
     }
 
     // click listeners
@@ -235,7 +271,7 @@ public class MainActivity extends ActionBarActivity {
 
             Intent i = new Intent(getApplicationContext(), DeviceSettingsActivity.class);
             i.putExtra("device", d);
-            startActivity(i);
+            startActivityForResult(i, Common.deviceChangeRequestCode);
         }
     };
 
@@ -249,7 +285,7 @@ public class MainActivity extends ActionBarActivity {
 
             Intent i = new Intent(getApplicationContext(), DeviceSettingsActivity.class);
             i.putExtra("device", d);
-            startActivity(i);
+            startActivityForResult(i, Common.deviceChangeRequestCode);
         }
     };
 

@@ -8,7 +8,7 @@ import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import com.raidzero.wirelessunlock.global.AppHelper;
+import com.raidzero.wirelessunlock.global.AppDelegate;
 import com.raidzero.wirelessunlock.global.Common;
 
 
@@ -22,10 +22,7 @@ public class UnlockService extends Service {
     private KeyguardManager keyguardManager;
     private KeyguardManager.KeyguardLock kgLock;
 
-    private AppHelper appHelper;
-    private SharedPreferences sharedPreferences;
-
-
+    private AppDelegate appDelegate;
 
     // this is an unbound service
     @Override
@@ -36,13 +33,8 @@ public class UnlockService extends Service {
     @Override
     public void onCreate() {
         this.keyguardManager = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
-
-
         this.kgLock = keyguardManager.newKeyguardLock(kgTag);
-        this.appHelper = Common.getAppHelper();
-
-        this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(appHelper);
-
+        this.appDelegate = Common.getAppDelegate();
 
         Log.d(tag, "Service created");
     }
@@ -52,7 +44,7 @@ public class UnlockService extends Service {
         kgLock.disableKeyguard();
         Log.d(tag, "Service started");
 
-        appHelper.showNotification();
+        appDelegate.showNotification();
         return START_STICKY; // Run until explicitly stopped.
     }
 
@@ -62,11 +54,8 @@ public class UnlockService extends Service {
             kgLock.reenableKeyguard();
         }
 
-        appHelper.dismissNotification();
+        appDelegate.dismissNotification();
 
         Log.d(tag, "Service destroyed");
     }
-
-
-
 }
