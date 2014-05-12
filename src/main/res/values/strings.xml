@@ -16,6 +16,7 @@
     <string name="main_wifiDevicesTitle">Enable trusted WiFi Network(s)</string>
     <string name="main_lockscreen_enabled">Lockscreen is ENABLED</string>
     <string name="main_lockscreen_disabled">Lockscreen is DISABLED</string>
+    <string name="main_appDisabled">Lockscreen control DISABLED</string>
     <string name="main_trusted_bluetoothLabel">Trusted Bluetooth Devices</string>
     <string name="main_trusted_wifiLabel">Trusted WiFi Networks</string>
     <string name="main_tap_to_configure">Tap a device/network to configure</string>

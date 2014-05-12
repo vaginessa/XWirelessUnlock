@@ -14,6 +14,11 @@ public class PowerReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        if (!appDelegate.isPrefEnabled("enableApp")) {
+            // don't do anything
+            return;
+        }
+
         appDelegate.processChanges();
     }
 }

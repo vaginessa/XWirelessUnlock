@@ -31,14 +31,24 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        Log.d(tag, "showNotifications changed! (" + key +  ")");
+        // showNotifications
         if (key.equals("showNotifications")) {
-            if (sharedPreferences.getBoolean(key, false)) {
-                Log.d(tag, "enabled notifications");
-                appDelegate.showNotification();
-            } else {
-                Log.d(tag, "disabled notifications");
-                appDelegate.dismissNotification();
+            if (appDelegate.isPrefEnabled("enableApp")) {
+                if (sharedPreferences.getBoolean(key, false)) {
+                    Log.d(tag, "enabled notifications");
+                    appDelegate.showNotification();
+                } else {
+                    Log.d(tag, "disabled notifications");
+                    appDelegate.dismissNotification();
+                }
+            }
+        }
+
+        // enableApp
+        if (key.equals("enableApp")) {
+            if (!sharedPreferences.getBoolean(key, false)) {
+                Log.d(tag, "disabled app");
+                appDelegate.stopUnlockService("Lock screen control disabled.");
             }
         }
     }

@@ -13,6 +13,9 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import com.raidzero.wirelessunlock.R;
 import com.raidzero.wirelessunlock.UnlockService;
+import com.raidzero.wirelessunlock.receivers.BluetoothReceiver;
+import com.raidzero.wirelessunlock.receivers.PowerReceiver;
+import com.raidzero.wirelessunlock.receivers.WifiReceiver;
 
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
@@ -38,6 +41,11 @@ public class AppDelegate extends Application {
 
     private boolean notificationDisplayed = false;
     private Bitmap largeIcon;
+
+    // receivers
+    private BluetoothReceiver bluetoothReceiver = null;
+    private WifiReceiver wifiReceiver = null;
+    private PowerReceiver powerReceiver = null;
 
     @Override
     public void onCreate() {
@@ -111,6 +119,7 @@ public class AppDelegate extends Application {
 
         if (sharedPreferences != null) {
             rtn = sharedPreferences.getBoolean(key, false);
+            Log.d(tag, "isPrefEnabled(" + key + ")? " + rtn);
         }
         return rtn;
     }
@@ -184,6 +193,7 @@ public class AppDelegate extends Application {
     }
 
     public void processChanges() {
+        Log.d(tag, "processChanges()");
         ArrayList<String> connectedDevices = new ArrayList<String>();
 
         // add wifi, if any
@@ -268,6 +278,10 @@ public class AppDelegate extends Application {
     }
 
     public void showNotification() {
+        if (!isPrefEnabled("appEnabled")) {
+            return;
+        }
+
         if (isPrefEnabled("showNotifications")) {
             if (!notificationDisplayed) {
                 Log.d(tag, "showNotification()");

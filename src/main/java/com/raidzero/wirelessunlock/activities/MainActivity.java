@@ -104,14 +104,21 @@ public class MainActivity extends ActionBarActivity {
         trustedBluetoothList.setOnItemClickListener(bluetoothClickListener);
         trustedWifiList.setOnItemClickListener(wifiClickListener);
 
-        // register message receiver if not already
-        if (messageReceiver == null) {
-            messageReceiver = new MessageReceiver();
-        }
-        IntentFilter ifilter = new IntentFilter(Common.messageIntent);
-        registerReceiver(messageReceiver, ifilter);
+        if (!appDelegate.isPrefEnabled("enableApp")) {
+            Log.d(tag, "control disabled");
+            lockStatusView.setText(getResources().getString(R.string.main_appDisabled));
+        } else {
+            Log.d(tag, "control enabled");
 
-        appDelegate.processChanges();
+            // register message receiver if not already
+            if (messageReceiver == null) {
+                messageReceiver = new MessageReceiver();
+            }
+            IntentFilter ifilter = new IntentFilter(Common.messageIntent);
+            registerReceiver(messageReceiver, ifilter);
+
+            appDelegate.processChanges();
+        }
     }
 
     @Override

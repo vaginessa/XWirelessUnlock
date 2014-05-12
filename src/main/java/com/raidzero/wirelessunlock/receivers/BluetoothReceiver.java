@@ -18,6 +18,12 @@ public class BluetoothReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+
+        if (!appDelegate.isPrefEnabled("enableApp")) {
+            // don't do anything
+            return;
+        }
+
         final String action = intent.getAction();
 
         if (action.equals(BluetoothDevice.ACTION_ACL_CONNECTED)) {
