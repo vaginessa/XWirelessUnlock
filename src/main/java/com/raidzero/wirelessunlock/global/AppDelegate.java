@@ -38,9 +38,11 @@ public class AppDelegate extends Application {
     private DateFormat logDateFormat = new SimpleDateFormat("yyyy-MM-dd @ HH:mm:ss");
 
     private NotificationManager notificationManager;
+    private Notification notification;
 
     private boolean notificationDisplayed = false;
     private Bitmap largeIcon;
+
 
     // receivers
     private BluetoothReceiver bluetoothReceiver = null;
@@ -76,6 +78,7 @@ public class AppDelegate extends Application {
             startService(new Intent(this, UnlockService.class));
             isServiceRunning = true;
             writeLog(reason + " Started service");
+            showNotification();
         }
         broadcastServiceState();
     }
@@ -86,6 +89,7 @@ public class AppDelegate extends Application {
             isServiceRunning = false;
             writeLog(reason + " Stopped service");
         }
+        dismissNotification();
         broadcastServiceState();
     }
 
@@ -271,21 +275,17 @@ public class AppDelegate extends Application {
     }
 
     public void dismissNotification() {
-        if (notificationDisplayed) {
+        if (notification != null) {
             notificationManager.cancel(R.string.service_notification_id);
             notificationDisplayed = false;
         }
     }
 
     public void showNotification() {
-        if (!isPrefEnabled("appEnabled")) {
-            return;
-        }
-
-        if (isPrefEnabled("showNotifications")) {
+        if (isPrefEnabled("showNotifications") && isServiceRunning) {
             if (!notificationDisplayed) {
                 Log.d(tag, "showNotification()");
-                Notification notification = new Notification.Builder(this)
+                notification  = new Notification.Builder(this)
                         .setContentTitle(getResources().getString(R.string.service_notificationTitle))
                         .setContentText(getResources().getString(R.string.service_notificationText))
                         .setSmallIcon(R.drawable.notification_icon)
