@@ -18,16 +18,15 @@ public class AppDevice implements Parcelable {
     private String deviceName;
     private String deviceAddress;
     private boolean chargingOnly;
-    private boolean enabled;
+    public boolean isChecked;
 
-    public AppDevice(DeviceType type, String name, String address, boolean chargingOnly, boolean enabled) {
+    public AppDevice(DeviceType type, String name, String address, boolean chargingOnly) {
         this.deviceType = type;
         this.deviceName = name;
         this.deviceAddress = address;
         this.chargingOnly = chargingOnly;
-        this.enabled = enabled;
 
-        Log.d(tag, String.format("Created device %s. Enabled: %s", deviceName, String.valueOf(enabled)));
+        Log.d(tag, String.format("Created device %s", deviceName));
     }
 
     public String getName() {
@@ -48,9 +47,6 @@ public class AppDevice implements Parcelable {
         return chargingOnly;
     }
 
-    public boolean getEnabled() {
-        return enabled;
-    }
 
     // parcelable stuff
     @Override
@@ -75,7 +71,6 @@ public class AppDevice implements Parcelable {
         dest.writeString(deviceName);
         dest.writeString(deviceAddress);
         dest.writeString(String.valueOf(chargingOnly));
-        dest.writeString(String.valueOf(enabled));
     }
 
     // this is needed to make the parcel
@@ -86,7 +81,6 @@ public class AppDevice implements Parcelable {
         deviceName = source.readString();
         deviceAddress = source.readString();
         chargingOnly = Boolean.valueOf(source.readString());
-        enabled = Boolean.valueOf(source.readString());
 
         if (dType.equals("BLUETOOTH")) {
             deviceType = DeviceType.BLUETOOTH;

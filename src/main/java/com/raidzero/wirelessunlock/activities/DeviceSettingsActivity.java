@@ -47,7 +47,7 @@ public class DeviceSettingsActivity extends Activity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 AppDevice newDevice = new AppDevice(d.getType(), d.getName(), d.getAddress(),
-                        chk_chargingOnly.isChecked(), true);
+                        chk_chargingOnly.isChecked());
 
                 Intent rtn = new Intent();
                 rtn.putExtra("replace", true);

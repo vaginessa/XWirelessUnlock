@@ -1,5 +1,6 @@
 package com.raidzero.wirelessunlock.activities;
 
+import android.app.admin.DevicePolicyManager;
 import android.content.*;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -50,7 +51,6 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main);
-
         appDelegate = (AppDelegate) getApplicationContext();
 
         lockStatusView = (TextView) findViewById(R.id.textView_lockStatus);
@@ -97,8 +97,8 @@ public class MainActivity extends ActionBarActivity {
         trustedBluetoothDevices = appDelegate.getTrustedBluetoothDevices();
         trustedWifiNetworks = appDelegate.getTrustedWifiNetworks();
 
-        btAdapter = new DeviceListAdapter(this, appDelegate.getTrustedBluetoothDevices(), true);
-        wifiAdapter = new DeviceListAdapter(this, appDelegate.getTrustedWifiNetworks(), true);
+        btAdapter = new DeviceListAdapter(this, appDelegate.getTrustedBluetoothDevices(), false);
+        wifiAdapter = new DeviceListAdapter(this, appDelegate.getTrustedWifiNetworks(), false);
 
         appDelegate.loadDevices();
 
@@ -160,23 +160,31 @@ public class MainActivity extends ActionBarActivity {
 
     private void startAddWifiNetwork() {
         Intent i = new Intent(this, AddWifiActivity.class);
-        startActivityForResult(i, Common.addDeviceRequestCode);
+        startActivityForResult(i, Common.ADD_DEVICE_REQUEST_CODE);
     }
 
     private void startAddBluetoothDevice() {
         Intent i = new Intent(this, AddBluetoothActivity.class);
-        startActivityForResult(i, Common.addDeviceRequestCode);
+        startActivityForResult(i, Common.ADD_DEVICE_REQUEST_CODE);
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         AppDevice d;
+        ArrayList<AppDevice> devices;
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
-                case Common.addDeviceRequestCode:
+                case Common.ADD_DEVICE_REQUEST_CODE:
                     d = data.getExtras().getParcelable("device");
-                    appDelegate.addTrustedDevice(d);
+                    if (d != null) {
+                        appDelegate.addTrustedDevice(d);
+                    }
+                    devices = data.getParcelableArrayListExtra("devices");
+
+                    if (devices != null) {
+                        appDelegate.addTrustedDevices(devices);
+                    }
                     break;
-                case Common.deviceChangeRequestCode:
+                case Common.CHANGE_DEVICE_REQUEST_CODE:
                     d = data.getExtras().getParcelable("device");
                     boolean remove = data.getBooleanExtra("remove", false);
                     if (remove) {
@@ -200,7 +208,7 @@ public class MainActivity extends ActionBarActivity {
 
             Intent i = new Intent(getApplicationContext(), DeviceSettingsActivity.class);
             i.putExtra("device", d);
-            startActivityForResult(i, Common.deviceChangeRequestCode);
+            startActivityForResult(i, Common.CHANGE_DEVICE_REQUEST_CODE);
         }
     };
 
@@ -214,7 +222,7 @@ public class MainActivity extends ActionBarActivity {
 
             Intent i = new Intent(getApplicationContext(), DeviceSettingsActivity.class);
             i.putExtra("device", d);
-            startActivityForResult(i, Common.deviceChangeRequestCode);
+            startActivityForResult(i, Common.CHANGE_DEVICE_REQUEST_CODE);
         }
     };
 

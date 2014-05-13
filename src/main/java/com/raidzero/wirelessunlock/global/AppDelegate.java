@@ -3,6 +3,8 @@ package com.raidzero.wirelessunlock.global;
 import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.admin.DevicePolicyManager;
 import android.content.*;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -13,9 +15,8 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import com.raidzero.wirelessunlock.R;
 import com.raidzero.wirelessunlock.UnlockService;
-import com.raidzero.wirelessunlock.receivers.BluetoothReceiver;
-import com.raidzero.wirelessunlock.receivers.PowerReceiver;
-import com.raidzero.wirelessunlock.receivers.WifiReceiver;
+import com.raidzero.wirelessunlock.activities.MainActivity;
+import com.raidzero.wirelessunlock.receivers.AdminReceiver;
 
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
@@ -37,14 +38,20 @@ public class AppDelegate extends Application {
     private ArrayList<String> connectedAddresses = new ArrayList<String>();
     private DateFormat logDateFormat = new SimpleDateFormat("yyyy-MM-dd @ HH:mm:ss");
 
+    // notification stuff
     private NotificationManager notificationManager;
     private Notification notification;
-
     private boolean notificationDisplayed = false;
     private Bitmap largeIcon;
+    private Intent mainActivityIntent;
 
     private ArrayList<AppDevice> trustedBluetoothDevices = new ArrayList<AppDevice>();
     private ArrayList<AppDevice> trustedWifiNetworks = new ArrayList<AppDevice>();
+
+    // device admin stuff
+    private boolean deviceAdminActive = false;
+    private DevicePolicyManager devicePolicyManager;
+    private ComponentName deviceAdmin;
 
     @Override
     public void onCreate() {
@@ -53,6 +60,11 @@ public class AppDelegate extends Application {
 
         Common.appDelegate = this;
         this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        this.mainActivityIntent = new Intent(this, MainActivity.class);
+
+        this.devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
+        this.deviceAdmin = new ComponentName(this, AdminReceiver.class);
 
         this.notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         this.largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
@@ -74,6 +86,12 @@ public class AppDelegate extends Application {
         removeFromList(list, device.getAddress());
 
         broadcastDeviceChange();
+    }
+
+    public void addTrustedDevices(ArrayList<AppDevice> devices) {
+        for (AppDevice d : devices) {
+            addTrustedDevice(d);
+        }
     }
 
     public void addTrustedDevice(AppDevice newDevice) {
@@ -145,8 +163,20 @@ public class AppDelegate extends Application {
 
     public synchronized void startUnlockService(String reason) {
         if (!isServiceRunning) {
+
+            if (devicePolicyManager.isAdminActive(deviceAdmin)) {
+                // remove any password
+                devicePolicyManager.setPasswordQuality(deviceAdmin, DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED);
+                devicePolicyManager.setPasswordMinimumLength(deviceAdmin, 0);
+
+                devicePolicyManager.resetPassword("",DevicePolicyManager.RESET_PASSWORD_REQUIRE_ENTRY);
+
+                Log.d(tag, "device admin: set stuff");
+            }
+
             startService(new Intent(this, UnlockService.class));
             isServiceRunning = true;
+
             writeLog(reason + " Started service");
             showNotification();
         }
@@ -155,6 +185,15 @@ public class AppDelegate extends Application {
 
     public synchronized void stopUnlockService(String reason) {
         if (isServiceRunning) {
+
+            // stop device administrator
+            if (devicePolicyManager.isAdminActive(deviceAdmin)) {
+                devicePolicyManager.removeActiveAdmin(deviceAdmin);
+
+                deviceAdminActive = false;
+                Log.d(tag, "device admin: stopped stuff");
+            }
+
             stopService(new Intent(this, UnlockService.class));
             isServiceRunning = false;
             writeLog(reason + " Stopped service");
@@ -373,6 +412,7 @@ public class AppDelegate extends Application {
                         .setSmallIcon(R.drawable.notification_icon)
                         .setLargeIcon(largeIcon)
                         .setOngoing(true)
+                        .setContentIntent(PendingIntent.getActivity(this, 0, mainActivityIntent, 0))
                         .build();
                 notificationManager.notify(R.string.service_notification_id, notification);
                 notificationDisplayed = true;
@@ -408,5 +448,22 @@ public class AppDelegate extends Application {
         }
 
         Log.d(tag, "loadDevices() done");
+    }
+
+    // device admin stuff
+    public void setDeviceAdminActive() {
+        deviceAdminActive = true;
+    }
+
+    public void setDeviceAdminInactive() {
+        deviceAdminActive = false;
+    }
+
+    public ComponentName getDeviceAdmin() {
+        return deviceAdmin;
+    }
+
+    public DevicePolicyManager getDevicePolicyManager() {
+        return devicePolicyManager;
     }
 }

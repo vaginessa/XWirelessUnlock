@@ -27,9 +27,9 @@ public class DeviceListLoader {
                 }
 
                 String line = String.format(
-                        "%s|%s|%s|%s|%s\n",
+                        "%s|%s|%s|%s\n",
                         dType, device.getName(), device.getAddress(),
-                        String.valueOf(device.getChargingOnly()), device.getEnabled());
+                        String.valueOf(device.getChargingOnly()));
 
                 writer.write(line);
             }
@@ -60,7 +60,6 @@ public class DeviceListLoader {
                 String name = data[1];
                 String address = data[2];
                 String strOnlyCharging = data[3];
-                String strEnabled = data[4];
 
                 if (strType.equals("BLUETOOTH")) {
                     dType = AppDevice.DeviceType.BLUETOOTH;
@@ -77,10 +76,9 @@ public class DeviceListLoader {
                 //Log.d(tag, String.format("strType: %s\nname: %s\naddress:%s\nstrOnlyCharging: %s\nstrEnabled: %s",
                 //        strType, name, address, strOnlyCharging, strEnabled));
 
-                Boolean enabled = Boolean.valueOf(strEnabled);
                 Boolean onlyCharging = Boolean.valueOf(strOnlyCharging);
 
-                rtn.add(new AppDevice(dType, name, address, onlyCharging, enabled));
+                rtn.add(new AppDevice(dType, name, address, onlyCharging));
             }
 
             String strType = (targetType == AppDevice.DeviceType.BLUETOOTH) ? "BLUETOOTH" : "WIFI";

@@ -1,20 +1,26 @@
 package com.raidzero.wirelessunlock.activities;
 
-import android.app.ListActivity;
+import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.*;
+
+import com.raidzero.wirelessunlock.global.AppDelegate;
 import com.raidzero.wirelessunlock.global.AppDevice;
 import com.raidzero.wirelessunlock.adapters.DeviceListAdapter;
 import com.raidzero.wirelessunlock.R;
+import com.raidzero.wirelessunlock.global.Common;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,41 +28,58 @@ import java.util.List;
 /**
  * Created by raidzero on 5/8/14 10:37 AM
  */
-public class AddWifiActivity extends ListActivity {
+public class AddWifiActivity extends Activity {
     private static final String tag = "WirelessUnlock/AddWifiActivity";
 
     private ArrayList<AppDevice> detectedWifiNetworks = new ArrayList<AppDevice>();
-    private ListView list_devices = null;
-    DeviceListAdapter adapter;
+    private ArrayList<AppDevice> selectedWifiNetworks = new ArrayList<AppDevice>();
+
+    private ListView networkList = null;
+    private Button scanButton = null;
+    private Button saveButton = null;
+    private DeviceListAdapter adapter;
+    private ProgressBar progressBar;
 
     private WifiManager wifiManager = null;
     private List<ScanResult> scanResults = null;
     private WifiReceiver wifiReceiver = null;
 
+    private AppDelegate appDelegate;
+
+    private ProgressDialog progressDialog;
+    private Context context;
+
+    private boolean scanComplete = false;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.device_list);
+        setContentView(R.layout.add_wifi);
 
-        list_devices = getListView();
+        context = this;
+        appDelegate = Common.getAppDelegate();
+        networkList = (ListView) findViewById(R.id.list_wifi_found_networks);
+        scanButton = (Button) findViewById(R.id.wifi_scan_button);
+        saveButton = (Button) findViewById(R.id.wifi_save_button);
+        progressBar = (ProgressBar) findViewById(R.id.wifi_progress_bar);
 
         // register wifi stuff and start scan
         wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
         wifiReceiver = new WifiReceiver();
         registerReceiver(wifiReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-        wifiManager.startScan();
 
-
-        setTitle(getResources().getString(R.string.wifi_scanning));
+        // set click listeners
+        scanButton.setOnClickListener(scanButtonListener);
+        saveButton.setOnClickListener(saveButtonListener);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-
-        adapter = new DeviceListAdapter(this, detectedWifiNetworks, false);
-        list_devices.setAdapter(adapter);
+        scanComplete = false;
+        adapter = new DeviceListAdapter(this, detectedWifiNetworks, true);
+        networkList.setAdapter(adapter);
     }
 
     class WifiReceiver extends BroadcastReceiver {
@@ -73,7 +96,10 @@ public class AddWifiActivity extends ListActivity {
             adapter.addAll(detectedWifiNetworks);
             adapter.notifyDataSetChanged();
 
-            setTitle(getResources().getString(R.string.action_add_wifi));
+            scanComplete = true;
+            hideProgressBar();
+            saveButton.setVisibility(View.VISIBLE);
+            scanButton.setText("Scan again");
         }
     }
 
@@ -95,7 +121,7 @@ public class AddWifiActivity extends ListActivity {
                     networkName = getResources().getString(R.string.wifi_hiddenNetwork);
                 }
 
-                AppDevice d = new AppDevice(AppDevice.DeviceType.WIFI, networkName, networkAddr, false, true);
+                AppDevice d = new AppDevice(AppDevice.DeviceType.WIFI, networkName, networkAddr, false);
                 //Log.d(tag, "Added network: " + networkName);
                 rtnList.add(d);
             }
@@ -105,15 +131,37 @@ public class AddWifiActivity extends ListActivity {
         return rtnList;
     }
 
-    @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        AppDevice device = detectedWifiNetworks.get(position);
-
-        // pass this device back to main activity
-        Intent data = new Intent();
-        data.putExtra("device", device);
-        setResult(RESULT_OK, data);
-        finish();
+    private void showProgressBar() {
+        progressBar.setVisibility(View.VISIBLE);
     }
+
+    private void hideProgressBar() {
+        progressBar.setVisibility(View.GONE);
+    }
+
+    // listeners
+    View.OnClickListener scanButtonListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View v) {
+            showProgressBar();
+            wifiManager.startScan();
+        }
+    };
+
+    View.OnClickListener saveButtonListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View v) {
+            Log.d(tag, "save button clicked");
+
+            selectedWifiNetworks = adapter.getCheckedDevices();
+
+            Intent rtnIntent = new Intent();
+            rtnIntent.putParcelableArrayListExtra("devices", selectedWifiNetworks);
+            setResult(RESULT_OK, rtnIntent);
+            finish();
+        }
+    };
 }
 

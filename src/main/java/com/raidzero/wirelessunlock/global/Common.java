@@ -18,8 +18,9 @@ public class Common {
     public static AppDelegate appDelegate;
 
     // activity request codes
-    public static final int addDeviceRequestCode = 1000;
-    public static final int deviceChangeRequestCode = 1001;
+    public static final int ADD_DEVICE_REQUEST_CODE = 1000;
+    public static final int CHANGE_DEVICE_REQUEST_CODE = 1001;
+    public static final int ENABLE_ADMIN_REQUEST_CODE = 2000;
 
     public static AppDelegate getAppDelegate() {
         if (MainActivity.appDelegate != null) {
