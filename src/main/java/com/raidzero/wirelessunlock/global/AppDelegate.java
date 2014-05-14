@@ -52,6 +52,8 @@ public class AppDelegate extends Application {
     private boolean deviceAdminActive = false;
     private DevicePolicyManager devicePolicyManager;
     private ComponentName deviceAdmin;
+    private int currentPasswordQuality;
+    private int currentPasswordLength;
 
     @Override
     public void onCreate() {
@@ -65,6 +67,8 @@ public class AppDelegate extends Application {
 
         this.devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
         this.deviceAdmin = new ComponentName(this, AdminReceiver.class);
+
+
 
         this.notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         this.largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
@@ -134,9 +138,6 @@ public class AppDelegate extends Application {
     }
 
     public void updateTrustedDevice(String address, AppDevice newDevice) {
-
-        ArrayList<AppDevice> devices = new ArrayList<AppDevice>();
-
         AppDevice.DeviceType type = newDevice.getType();
 
         AppDevice oldDevice = getDeviceFromAddress(type, address);
@@ -165,11 +166,13 @@ public class AppDelegate extends Application {
         if (!isServiceRunning) {
 
             if (devicePolicyManager.isAdminActive(deviceAdmin)) {
-                // remove any password
+                // save password params
+                currentPasswordQuality = devicePolicyManager.getPasswordQuality(deviceAdmin);
+                currentPasswordLength = devicePolicyManager.getPasswordMinimumLength(deviceAdmin);
+
+                // relax
                 devicePolicyManager.setPasswordQuality(deviceAdmin, DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED);
                 devicePolicyManager.setPasswordMinimumLength(deviceAdmin, 0);
-
-                devicePolicyManager.resetPassword("",DevicePolicyManager.RESET_PASSWORD_REQUIRE_ENTRY);
 
                 Log.d(tag, "device admin: set stuff");
             }
@@ -188,9 +191,10 @@ public class AppDelegate extends Application {
 
             // stop device administrator
             if (devicePolicyManager.isAdminActive(deviceAdmin)) {
-                devicePolicyManager.removeActiveAdmin(deviceAdmin);
+                // re-apply password params
+                devicePolicyManager.setPasswordQuality(deviceAdmin, currentPasswordQuality);
+                devicePolicyManager.setPasswordMinimumLength(deviceAdmin, currentPasswordLength);
 
-                deviceAdminActive = false;
                 Log.d(tag, "device admin: stopped stuff");
             }
 
@@ -333,7 +337,7 @@ public class AppDelegate extends Application {
         for (String d : connectedDevices) {
 
             if (isAddressTrusted(d)) {
-                AppDevice device = null;
+                AppDevice device;
                 String deviceType;
 
                 // bluetooth?
@@ -409,6 +413,7 @@ public class AppDelegate extends Application {
                 notification  = new Notification.Builder(this)
                         .setContentTitle(getResources().getString(R.string.service_notificationTitle))
                         .setContentText(getResources().getString(R.string.service_notificationText))
+                        .setTicker(getResources().getString(R.string.service_notificationTitle))
                         .setSmallIcon(R.drawable.notification_icon)
                         .setLargeIcon(largeIcon)
                         .setOngoing(true)

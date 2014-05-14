@@ -24,6 +24,6 @@ public class AdminReceiver  extends DeviceAdminReceiver {
     @Override
     public void onDisabled(Context context, Intent intent) {
         appDelegate.setDeviceAdminInactive();
-        Log.d(tag, "device amdin disabled");
+        Log.d(tag, "device admin disabled");
     }
 }

@@ -30,8 +30,8 @@ public class MainActivity extends ActionBarActivity {
 
     public static AppDelegate appDelegate;
 
-    private MessageReceiver messageReceiver;
-    private RefreshDevicesReceiver refreshDevicesReceiver;
+    private MessageReceiver messageReceiver = null;
+    private RefreshDevicesReceiver refreshDevicesReceiver = null;
 
     // views
     private static TextView lockStatusView = null;
@@ -46,12 +46,28 @@ public class MainActivity extends ActionBarActivity {
     DeviceListAdapter btAdapter;
     DeviceListAdapter wifiAdapter;
 
+    // device admin
+    ComponentName deviceAdmin;
+    DevicePolicyManager devicePolicyManager;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main);
         appDelegate = (AppDelegate) getApplicationContext();
+
+        devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
+        deviceAdmin = appDelegate.getDeviceAdmin();
+
+        if (!devicePolicyManager.isAdminActive(deviceAdmin)) {
+
+            Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+            intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, deviceAdmin);
+            intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                    getResources().getString(R.string.device_admin_description));
+
+            startActivityForResult(intent, Common.ENABLE_ADMIN_REQUEST_CODE);
+        }
 
         lockStatusView = (TextView) findViewById(R.id.textView_lockStatus);
 
@@ -136,15 +152,31 @@ public class MainActivity extends ActionBarActivity {
     public void onDestroy() {
         super.onDestroy();
 
-        // unregister message receiver
-        if (messageReceiver != null) {
-            unregisterReceiver(messageReceiver);
-        }
+
     }
 
     @Override
     public void onPause() {
         super.onPause();
+
+        // unregister message receiver
+        if (messageReceiver != null) {
+            try {
+                unregisterReceiver(messageReceiver);
+            } catch (IllegalArgumentException e) {
+                Log.d(tag, "messageReceiver " + e.getMessage());
+            }
+        }
+
+        // unregister device refresh receiver
+        if (refreshDevicesReceiver != null) {
+            try {
+                unregisterReceiver(refreshDevicesReceiver);
+            } catch (IllegalArgumentException e) {
+                Log.d(tag, "refreshDevicesReceiver " + e.getMessage());
+            }
+        }
+
         appDelegate.writeDeviceFile();
     }
 

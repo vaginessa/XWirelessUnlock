@@ -18,7 +18,6 @@ public class AppDevice implements Parcelable {
     private String deviceName;
     private String deviceAddress;
     private boolean chargingOnly;
-    public boolean isChecked;
 
     public AppDevice(DeviceType type, String name, String address, boolean chargingOnly) {
         this.deviceType = type;

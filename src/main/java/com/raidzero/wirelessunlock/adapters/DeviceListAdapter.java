@@ -58,7 +58,7 @@ public class DeviceListAdapter extends ArrayAdapter<AppDevice> {
                 chkBox.setChecked(checkboxes[position]);
             }
 
-            chkBox.setTag(Integer.valueOf(position));
+            chkBox.setTag(position);
 
             chkBox.setOnClickListener(new CompoundButton.OnClickListener() {
                 @Override
