@@ -4,48 +4,62 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/wifi_scan_button"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:text="@string/wifi_scan_again"
+        android:layout_weight="6">
+
+        <ProgressBar
+            android:id="@+id/wifi_progress_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:indeterminateOnly="true"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:visibility="gone"/>
+
+        <!--
+        <View android:id="@+id/separator"
+            android:background="@color/separatorColor"
+            android:layout_width = "fill_parent"
+            android:layout_height="1dip"
+            android:layout_centerVertical ="true"
+            android:layout_alignParentTop="true"
+            android:visibility="gone"/>-->
+
+        <!-- list of networks -->
+        <ListView
+            android:id="@+id/list_wifi_found_networks"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/buttonRow"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:visibility="gone"
-    />
+        android:padding="3dp">
 
-    <ProgressBar
-        android:id="@+id/wifi_progress_bar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:indeterminateOnly="true"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_below="@id/wifi_scan_button"
-        android:visibility="gone"/>
+        <Button
+            android:id="@+id/wifi_save_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:layout_alignParentLeft="true"
+            android:text="Save"
+            android:gravity="center_vertical|center_horizontal"/>
 
-
-    <View android:id="@+id/separator"
-        android:background="@color/separatorColor"
-        android:layout_width = "fill_parent"
-        android:layout_height="1dip"
-        android:layout_centerVertical ="true"
-        android:layout_alignParentTop="true"/>
-
-
-    <!-- list of networks -->
-    <ListView
-        android:id="@+id/list_wifi_found_networks"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"/>
-
-    <Button
-        android:id="@+id/wifi_save_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="Save"
-        android:visibility="gone"/>
+        <Button
+            android:id="@+id/wifi_scan_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:text="@string/wifi_scan_again"
+            android:gravity="center_vertical|center_horizontal|right"/>
+    </RelativeLayout>
 
 </LinearLayout>

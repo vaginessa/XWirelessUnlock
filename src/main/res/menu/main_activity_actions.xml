@@ -13,4 +13,7 @@
     <item android:id="@+id/action_settings"
         android:title="@string/action_settings"
         android:showAsAction="never" />
+    <item android:id="@+id/action_uninstall"
+          android:title="@string/action_uninstall"
+          android:showAsAction="never" />
 </menu>

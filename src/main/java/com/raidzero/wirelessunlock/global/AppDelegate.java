@@ -506,4 +506,8 @@ public class AppDelegate extends Application {
         Log.d(tag, "returning " + lastScannedNetworks.size() + " scanned network data");
         return lastScannedNetworks;
     }
+
+    public SharedPreferences getSharedPreferences() {
+        return sharedPreferences;
+    }
 }

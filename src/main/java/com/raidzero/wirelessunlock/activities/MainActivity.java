@@ -3,6 +3,7 @@ package com.raidzero.wirelessunlock.activities;
 import android.app.Activity;
 import android.app.admin.DevicePolicyManager;
 import android.content.*;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -30,6 +31,7 @@ public class MainActivity extends ActionBarActivity {
     private static final String tag = "WirelessUnlock/MainActivity";
 
     public static AppDelegate appDelegate;
+    private SharedPreferences sharedPreferences;
 
     private MessageReceiver messageReceiver = null;
     private RefreshDevicesReceiver refreshDevicesReceiver = null;
@@ -56,6 +58,8 @@ public class MainActivity extends ActionBarActivity {
 
         setContentView(R.layout.main);
         appDelegate = (AppDelegate) getApplicationContext();
+
+        sharedPreferences = appDelegate.getSharedPreferences();
 
         devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
         deviceAdmin = appDelegate.getDeviceAdmin();
@@ -102,6 +106,9 @@ public class MainActivity extends ActionBarActivity {
             case R.id.action_settings:
                 openSettings();
                 return true;
+            case R.id.action_uninstall:
+                uninstallApplication();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -125,7 +132,8 @@ public class MainActivity extends ActionBarActivity {
         trustedBluetoothList.setOnItemClickListener(bluetoothClickListener);
         trustedWifiList.setOnItemClickListener(wifiClickListener);
 
-        if (!appDelegate.isPrefEnabled("enableApp")) {
+        // this defaults to true
+        if (!sharedPreferences.getBoolean("enableApp", true)) {
             Log.d(tag, "control disabled");
             lockStatusView.setText(getResources().getString(R.string.main_appDisabled));
         } else {
@@ -152,8 +160,6 @@ public class MainActivity extends ActionBarActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-
     }
 
     @Override
@@ -201,6 +207,21 @@ public class MainActivity extends ActionBarActivity {
         startActivityForResult(i, Common.ADD_DEVICE_REQUEST_CODE);
     }
 
+    private void uninstallApplication() {
+        // deactivate device admin
+        if (devicePolicyManager.isAdminActive(deviceAdmin)) {
+
+            // in order to even get here, the admin has to be active, but just in case
+            devicePolicyManager.removeActiveAdmin(deviceAdmin);
+        }
+
+        // now launch uninstall
+        Uri packageUri = Uri.parse("package:com.raidzero.wirelessunlock");
+        Intent uninstallIntent =
+                new Intent(Intent.ACTION_UNINSTALL_PACKAGE, packageUri);
+        startActivity(uninstallIntent);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         AppDevice d;
@@ -240,7 +261,6 @@ public class MainActivity extends ActionBarActivity {
                 }
                 break;
         }
-
 
         super.onActivityResult(requestCode, resultCode, data);
     }

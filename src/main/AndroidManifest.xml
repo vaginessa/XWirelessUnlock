@@ -57,7 +57,7 @@
             android:name=".activities.AddBluetoothActivity"
             android:theme="@android:style/Theme.DeviceDefault.Dialog"
 
-            android:label="@string/action_add_bluetooth" >
+            android:label="@string/bluetooth_select_device" >
         </activity>
 
         <activity

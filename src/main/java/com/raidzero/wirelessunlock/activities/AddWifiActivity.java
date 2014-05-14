@@ -38,6 +38,7 @@ public class AddWifiActivity extends Activity {
     private ListView networkList = null;
     private Button scanButton = null;
     private Button saveButton = null;
+    private RelativeLayout buttonRow = null;
     private DeviceListAdapter adapter = null;
     private ProgressBar progressBar = null;
 
@@ -59,6 +60,7 @@ public class AddWifiActivity extends Activity {
         networkList = (ListView) findViewById(R.id.list_wifi_found_networks);
         scanButton = (Button) findViewById(R.id.wifi_scan_button);
         saveButton = (Button) findViewById(R.id.wifi_save_button);
+        buttonRow = (RelativeLayout) findViewById(R.id.buttonRow);
         progressBar = (ProgressBar) findViewById(R.id.wifi_progress_bar);
 
         // set click listeners
@@ -171,6 +173,7 @@ public class AddWifiActivity extends Activity {
     };
 
     private void startScanning() {
+        setTitle(getResources().getString(R.string.wifi_scanning));
         showProgressBar();
 
         // register wifi stuff and start scan
@@ -186,9 +189,10 @@ public class AddWifiActivity extends Activity {
         adapter.addAll(networks);
         adapter.notifyDataSetChanged();
 
-        scanButton.setVisibility(View.VISIBLE);
-        saveButton.setVisibility(View.VISIBLE);
+        buttonRow.setVisibility(View.VISIBLE);
+
         hideProgressBar();
+        setTitle(getResources().getString(R.string.wifi_select_network));
     }
 }
 
