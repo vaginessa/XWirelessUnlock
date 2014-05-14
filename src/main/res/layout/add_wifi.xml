@@ -10,7 +10,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:gravity="center"
-        android:text="Scan"
+        android:text="@string/wifi_scan_again"
+        android:visibility="gone"
     />
 
     <ProgressBar

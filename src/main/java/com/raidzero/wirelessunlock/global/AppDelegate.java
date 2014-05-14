@@ -17,6 +17,7 @@ import com.raidzero.wirelessunlock.R;
 import com.raidzero.wirelessunlock.UnlockService;
 import com.raidzero.wirelessunlock.activities.MainActivity;
 import com.raidzero.wirelessunlock.receivers.AdminReceiver;
+import com.raidzero.wirelessunlock.receivers.ScreenReceiver;
 
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
@@ -55,6 +56,15 @@ public class AppDelegate extends Application {
     private int currentPasswordQuality;
     private int currentPasswordLength;
 
+    private ScreenReceiver screenReceiver = null;
+    public enum ScreenPowerState {
+        ON, OFF
+    };
+
+    private ScreenPowerState screenState;
+
+    private ArrayList<AppDevice> lastScannedNetworks = new ArrayList<AppDevice>();
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -68,10 +78,19 @@ public class AppDelegate extends Application {
         this.devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
         this.deviceAdmin = new ComponentName(this, AdminReceiver.class);
 
-
-
         this.notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         this.largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
+
+        // register screen receiver
+        if (screenReceiver == null) {
+            screenReceiver = new ScreenReceiver();
+
+            IntentFilter screenFilter = new IntentFilter();
+            screenFilter.addAction(Intent.ACTION_SCREEN_OFF);
+            screenFilter.addAction(Intent.ACTION_SCREEN_ON);
+
+            registerReceiver(screenReceiver, screenFilter);
+        }
     }
 
     public ArrayList<AppDevice> getTrustedBluetoothDevices() {
@@ -195,6 +214,7 @@ public class AppDelegate extends Application {
                 devicePolicyManager.setPasswordQuality(deviceAdmin, currentPasswordQuality);
                 devicePolicyManager.setPasswordMinimumLength(deviceAdmin, currentPasswordLength);
 
+                devicePolicyManager.lockNow();
                 Log.d(tag, "device admin: stopped stuff");
             }
 
@@ -203,6 +223,7 @@ public class AppDelegate extends Application {
             writeLog(reason + " Stopped service");
         }
         dismissNotification();
+
         broadcastServiceState();
     }
 
@@ -468,7 +489,21 @@ public class AppDelegate extends Application {
         return deviceAdmin;
     }
 
-    public DevicePolicyManager getDevicePolicyManager() {
-        return devicePolicyManager;
+    public void setScreenState(ScreenPowerState state) {
+        if (state == ScreenPowerState.OFF) {
+            screenState = ScreenPowerState.OFF;
+        } else {
+            screenState = ScreenPowerState.ON;
+        }
+    }
+
+    public void setLastScannedNetworks(ArrayList<AppDevice> networks) {
+        lastScannedNetworks = networks;
+        Log.d(tag, "added " + networks.size() + " to scanned data");
+    }
+
+    public ArrayList<AppDevice> getLastScannedNetworks() {
+        Log.d(tag, "returning " + lastScannedNetworks.size() + " scanned network data");
+        return lastScannedNetworks;
     }
 }

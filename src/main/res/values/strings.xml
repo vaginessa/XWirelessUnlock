@@ -37,6 +37,7 @@
     <string name="wifi_select_network">Select WiFi network(s)</string>
     <string name="wifi_scanning">Scanning for WiFi networks&#8230;</string>
     <string name="wifi_hiddenNetwork">**Hidden SSID**</string>
+    <string name="wifi_scan_again">Scan again</string>
 
     <!-- bluetooth selector -->
     <string name="bluetooth_select_device">Select a bluetooth device</string>

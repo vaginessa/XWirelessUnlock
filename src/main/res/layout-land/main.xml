@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:padding="10dp">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="6">
+
+        <TextView
+            android:id="@+id/textView_lockStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:text="Lockscreen Status"
+            android:padding="3dp"
+            android:layout_gravity="center_horizontal"
+            />
+
+        <View android:id="@+id/separator"
+              android:background="@color/separatorColor"
+              android:layout_width = "fill_parent"
+              android:layout_height="1dip"
+              android:layout_centerVertical ="true"
+              android:layout_alignParentTop="true"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- bluetooth layout -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_weight="1">
+
+                <TextView
+                    android:id="@+id/textView_BluetoothLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="4dp"
+                    android:text="@string/main_trusted_bluetoothLabel"
+                    android:textStyle="bold"
+                    android:layout_gravity="left"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    />
+
+                <View android:id="@id/separator"
+                      android:background="@color/separatorColor"
+                      android:layout_width = "fill_parent"
+                      android:layout_height="1dip"
+                      android:layout_centerVertical ="true"
+                      android:layout_alignParentTop="true"/>
+
+                <ListView
+                    android:id="@+id/list_trusted_bluetooth_devices"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+            </LinearLayout>
+
+            <View android:id="@id/separator"
+                android:background="@color/separatorColor"
+                android:layout_width = "1dp"
+                android:layout_height="fill_parent"
+                android:padding="40dp"
+                android:layout_centerVertical ="true"/>
+
+            <!-- wifi layout -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_weight="1">
+
+                <TextView
+                    android:id="@+id/textView_WifiLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="4dp"
+                    android:text="@string/main_trusted_wifiLabel"
+                    android:textStyle="bold"
+                    android:layout_gravity="left"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"/>
+
+                <View android:id="@id/separator"
+                      android:background="@color/separatorColor"
+                      android:layout_width = "fill_parent"
+                      android:layout_height="1dip"
+                      android:layout_centerVertical ="true"
+                      android:layout_alignParentTop="true"/>
+
+                <ListView
+                    android:id="@+id/list_trusted_wifi_devices"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+    <TextView
+        android:id="@+id/textView_tap_to_configre"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:paddingTop="5dp"
+        android:text="@string/main_tap_to_configure"
+        android:layout_gravity="center_horizontal"
+        android:gravity="bottom"
+        android:layout_weight="1"/>
+
+</LinearLayout>

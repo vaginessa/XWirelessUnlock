@@ -33,12 +33,13 @@ public class AddWifiActivity extends Activity {
 
     private ArrayList<AppDevice> detectedWifiNetworks = new ArrayList<AppDevice>();
     private ArrayList<AppDevice> selectedWifiNetworks = new ArrayList<AppDevice>();
+    private ArrayList<AppDevice> lastScannedNetworks = new ArrayList<AppDevice>();
 
     private ListView networkList = null;
     private Button scanButton = null;
     private Button saveButton = null;
-    private DeviceListAdapter adapter;
-    private ProgressBar progressBar;
+    private DeviceListAdapter adapter = null;
+    private ProgressBar progressBar = null;
 
     private WifiManager wifiManager = null;
     private List<ScanResult> scanResults = null;
@@ -46,28 +47,19 @@ public class AddWifiActivity extends Activity {
 
     private AppDelegate appDelegate;
 
-    private ProgressDialog progressDialog;
-    private Context context;
-
-    private boolean scanComplete = false;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.add_wifi);
 
-        context = this;
         appDelegate = Common.getAppDelegate();
+
+        // view objects
         networkList = (ListView) findViewById(R.id.list_wifi_found_networks);
         scanButton = (Button) findViewById(R.id.wifi_scan_button);
         saveButton = (Button) findViewById(R.id.wifi_save_button);
         progressBar = (ProgressBar) findViewById(R.id.wifi_progress_bar);
-
-        // register wifi stuff and start scan
-        wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
-        wifiReceiver = new WifiReceiver();
-        registerReceiver(wifiReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
 
         // set click listeners
         scanButton.setOnClickListener(scanButtonListener);
@@ -77,9 +69,22 @@ public class AddWifiActivity extends Activity {
     @Override
     public void onResume() {
         super.onResume();
-        scanComplete = false;
+
         adapter = new DeviceListAdapter(this, detectedWifiNetworks, true);
         networkList.setAdapter(adapter);
+
+        lastScannedNetworks = appDelegate.getLastScannedNetworks();
+
+        // if we already have a list of scanned networks, just display it
+        if (lastScannedNetworks.size() > 0) {
+            Log.d(tag, "saved scanned data found.");
+            detectedWifiNetworks = lastScannedNetworks;
+            loadScannedData(detectedWifiNetworks);
+        }
+        else
+        {
+            startScanning();
+        }
     }
 
     class WifiReceiver extends BroadcastReceiver {
@@ -92,14 +97,7 @@ public class AddWifiActivity extends Activity {
             int numNetworks = detectedWifiNetworks.size();
             Log.d(tag, "Found " + numNetworks + " networks.");
 
-            adapter.clear();
-            adapter.addAll(detectedWifiNetworks);
-            adapter.notifyDataSetChanged();
-
-            scanComplete = true;
-            hideProgressBar();
-            saveButton.setVisibility(View.VISIBLE);
-            scanButton.setText("Scan again");
+            loadScannedData(detectedWifiNetworks);
         }
     }
 
@@ -133,6 +131,10 @@ public class AddWifiActivity extends Activity {
         }
 
         unregisterReceiver(wifiReceiver);
+
+        // save the networks in appDelegate
+        appDelegate.setLastScannedNetworks(rtnList);
+
         return rtnList;
     }
 
@@ -149,8 +151,7 @@ public class AddWifiActivity extends Activity {
 
         @Override
         public void onClick(View v) {
-            showProgressBar();
-            wifiManager.startScan();
+            startScanning();
         }
     };
 
@@ -168,5 +169,26 @@ public class AddWifiActivity extends Activity {
             finish();
         }
     };
+
+    private void startScanning() {
+        showProgressBar();
+
+        // register wifi stuff and start scan
+        wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
+        wifiReceiver = new WifiReceiver();
+        registerReceiver(wifiReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+
+        wifiManager.startScan();
+    }
+
+    private void loadScannedData(ArrayList<AppDevice> networks) {
+        adapter.clear();
+        adapter.addAll(networks);
+        adapter.notifyDataSetChanged();
+
+        scanButton.setVisibility(View.VISIBLE);
+        saveButton.setVisibility(View.VISIBLE);
+        hideProgressBar();
+    }
 }
 

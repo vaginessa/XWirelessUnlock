@@ -73,7 +73,7 @@ public class AddBluetoothActivity extends ListActivity {
                 String address = d.getAddress();
 
                 // make AppDevice
-                AppDevice device = new AppDevice(AppDevice.DeviceType.BLUETOOTH, name, address, true);
+                AppDevice device = new AppDevice(AppDevice.DeviceType.BLUETOOTH, name, address, false);
 
                 //Log.d(tag, String.format("created device. (name: %s, address: %s)", device.getName(), device.getAddress()));
                 // Add to arraylist

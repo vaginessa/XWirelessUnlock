@@ -6,6 +6,11 @@
               android:layout_height="match_parent"
               android:padding="10dp">
 
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="6">
 
     <TextView
         android:id="@+id/textView_lockStatus"
@@ -23,16 +28,6 @@
           android:layout_height="1dip"
           android:layout_centerVertical ="true"
           android:layout_alignParentTop="true"/>
-
-    <TextView
-        android:id="@+id/textView_tap_to_configre"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="14sp"
-        android:padding="10dp"
-        android:text="@string/main_tap_to_configure"
-        android:layout_gravity="center_horizontal"
-        />
 
     <TextView
         android:id="@+id/textView_BluetoothLabel"
@@ -78,5 +73,18 @@
         android:id="@+id/list_trusted_wifi_devices"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/textView_tap_to_configre"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:paddingTop="5dp"
+        android:text="@string/main_tap_to_configure"
+        android:layout_gravity="center_horizontal"
+        android:gravity="bottom"
+        android:layout_weight="1"/>
 
 </LinearLayout>
