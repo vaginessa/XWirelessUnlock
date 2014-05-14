@@ -1,5 +1,6 @@
 package com.raidzero.wirelessunlock.activities;
 
+import android.app.Activity;
 import android.app.admin.DevicePolicyManager;
 import android.content.*;
 import android.os.Bundle;
@@ -200,33 +201,44 @@ public class MainActivity extends ActionBarActivity {
         startActivityForResult(i, Common.ADD_DEVICE_REQUEST_CODE);
     }
 
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         AppDevice d;
         ArrayList<AppDevice> devices;
-        if (resultCode == RESULT_OK) {
-            switch (requestCode) {
-                case Common.ADD_DEVICE_REQUEST_CODE:
-                    d = data.getExtras().getParcelable("device");
-                    if (d != null) {
-                        appDelegate.addTrustedDevice(d);
-                    }
-                    devices = data.getParcelableArrayListExtra("devices");
 
-                    if (devices != null) {
-                        appDelegate.addTrustedDevices(devices);
-                    }
-                    break;
-                case Common.CHANGE_DEVICE_REQUEST_CODE:
-                    d = data.getExtras().getParcelable("device");
-                    boolean remove = data.getBooleanExtra("remove", false);
-                    if (remove) {
-                        appDelegate.removeTrustedDevice(d);
-                    } else {
-                        appDelegate.updateTrustedDevice(d.getAddress(), d);
-                    }
-                    break;
-            }
+        switch (requestCode) {
+            case Common.ADD_DEVICE_REQUEST_CODE:
+                d = data.getExtras().getParcelable("device");
+                if (d != null) {
+                    appDelegate.addTrustedDevice(d);
+                }
+                devices = data.getParcelableArrayListExtra("devices");
+
+                if (devices != null) {
+                    appDelegate.addTrustedDevices(devices);
+                }
+                break;
+            case Common.CHANGE_DEVICE_REQUEST_CODE:
+                d = data.getExtras().getParcelable("device");
+                boolean remove = data.getBooleanExtra("remove", false);
+                if (remove) {
+                    appDelegate.removeTrustedDevice(d);
+                } else {
+                    appDelegate.updateTrustedDevice(d.getAddress(), d);
+                }
+                break;
+            case Common.ENABLE_ADMIN_REQUEST_CODE:
+                if (resultCode == RESULT_OK) {
+                    Log.d(tag, "device admin request accepted");
+                } else {
+                    Log.d(tag, "device admin request denied");
+                    finish();
+                }
+                break;
         }
+
+
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     // click listeners
