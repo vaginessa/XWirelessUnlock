@@ -127,7 +127,7 @@ public class AppDelegate extends Application {
         }
     }
 
-    private boolean addressExists(ArrayList<AppDevice> list, String address) {
+    public boolean addressExists(ArrayList<AppDevice> list, String address) {
         for (AppDevice d : list) {
             if (d.getAddress().equals(address)) {
                 return true;

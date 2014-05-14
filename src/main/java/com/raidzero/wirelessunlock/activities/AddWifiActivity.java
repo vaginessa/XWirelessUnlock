@@ -121,6 +121,11 @@ public class AddWifiActivity extends Activity {
                     networkName = getResources().getString(R.string.wifi_hiddenNetwork);
                 }
 
+                if (appDelegate.addressExists(appDelegate.getTrustedWifiNetworks(), networkAddr)) {
+                    Log.d(tag, "skipping existing network " + networkName);
+                    continue;
+                }
+
                 AppDevice d = new AppDevice(AppDevice.DeviceType.WIFI, networkName, networkAddr, false);
                 //Log.d(tag, "Added network: " + networkName);
                 rtnList.add(d);

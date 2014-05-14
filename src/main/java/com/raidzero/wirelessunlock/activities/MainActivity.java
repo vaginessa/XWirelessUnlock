@@ -208,23 +208,27 @@ public class MainActivity extends ActionBarActivity {
 
         switch (requestCode) {
             case Common.ADD_DEVICE_REQUEST_CODE:
-                d = data.getExtras().getParcelable("device");
-                if (d != null) {
-                    appDelegate.addTrustedDevice(d);
-                }
-                devices = data.getParcelableArrayListExtra("devices");
+                if (resultCode == RESULT_OK) {
+                    d = data.getExtras().getParcelable("device");
+                    if (d != null) {
+                        appDelegate.addTrustedDevice(d);
+                    }
+                    devices = data.getParcelableArrayListExtra("devices");
 
-                if (devices != null) {
-                    appDelegate.addTrustedDevices(devices);
+                    if (devices != null) {
+                        appDelegate.addTrustedDevices(devices);
+                    }
                 }
                 break;
             case Common.CHANGE_DEVICE_REQUEST_CODE:
-                d = data.getExtras().getParcelable("device");
-                boolean remove = data.getBooleanExtra("remove", false);
-                if (remove) {
-                    appDelegate.removeTrustedDevice(d);
-                } else {
-                    appDelegate.updateTrustedDevice(d.getAddress(), d);
+                if (resultCode == RESULT_OK) {
+                    d = data.getExtras().getParcelable("device");
+                    boolean remove = data.getBooleanExtra("remove", false);
+                    if (remove) {
+                        appDelegate.removeTrustedDevice(d);
+                    } else {
+                        appDelegate.updateTrustedDevice(d.getAddress(), d);
+                    }
                 }
                 break;
             case Common.ENABLE_ADMIN_REQUEST_CODE:
