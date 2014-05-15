@@ -12,15 +12,12 @@ import com.raidzero.wirelessunlock.global.Common;
  * Created by posborn on 5/14/14.
  */
 
-public class ScreenReceiver extends BroadcastReceiver {
+public class ScreenReceiver extends IntentReceiver {
     private static final String tag = "WirelessUnlock/ScreenReceiver";
-    AppDelegate appDelegate = Common.getAppDelegate();
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        String action = intent.getAction();
-
-        Log.d(tag, "Receiver fired on intent: " + action);
+        super.onReceive(context, intent);
 
         if (action.equals(Intent.ACTION_SCREEN_ON)) {
             appDelegate.setScreenState(AppDelegate.ScreenPowerState.ON);
@@ -30,6 +27,6 @@ public class ScreenReceiver extends BroadcastReceiver {
             appDelegate.setScreenState(AppDelegate.ScreenPowerState.OFF);
         }
 
-        appDelegate.processChanges();
+
     }
 }

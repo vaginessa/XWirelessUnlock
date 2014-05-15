@@ -214,7 +214,9 @@ public class AppDelegate extends Application {
                 devicePolicyManager.setPasswordQuality(deviceAdmin, currentPasswordQuality);
                 devicePolicyManager.setPasswordMinimumLength(deviceAdmin, currentPasswordLength);
 
-                devicePolicyManager.lockNow();
+                if (screenState == ScreenPowerState.OFF) {
+                    devicePolicyManager.lockNow();
+                }
                 Log.d(tag, "device admin: stopped stuff");
             }
 
@@ -237,6 +239,10 @@ public class AppDelegate extends Application {
             data = getResources().getString(R.string.main_lockscreen_disabled);
         } else {
             data = getResources().getString(R.string.main_lockscreen_enabled);
+        }
+
+        if (!sharedPreferences.getBoolean("enableApp", true)) {
+            data = getResources().getString(R.string.main_appDisabled);
         }
 
         i.putExtra("message", data);
@@ -264,16 +270,6 @@ public class AppDelegate extends Application {
                 status == BatteryManager.BATTERY_STATUS_FULL;
     }
 
-    public boolean isPrefEnabled(String key) {
-        boolean rtn = false;
-
-        if (sharedPreferences != null) {
-            rtn = sharedPreferences.getBoolean(key, false);
-            Log.d(tag, "isPrefEnabled(" + key + ")? " + rtn);
-        }
-        return rtn;
-    }
-
     private String getConnectedWifiAddress() {
         try {
             WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
@@ -290,7 +286,7 @@ public class AppDelegate extends Application {
         try {
             rtn = DeviceListLoader.loadDeviceList(type, openFileInput(Common.deviceFile));
         } catch (Exception e) {
-            Log.d(tag, "getTrustedDevices() error: " + e.getMessage());
+//            Log.d(tag, "getTrustedDevices() error: " + e.getMessage());
             return null;
         }
 
@@ -301,12 +297,12 @@ public class AppDelegate extends Application {
             // leave it at 0
         }
 
-        Log.d(tag, "getTrustedDevices() returning " + numDevices + " devices.");
+//        Log.d(tag, "getTrustedDevices() returning " + numDevices + " devices.");
         return rtn;
     }
 
     private boolean isAddressTrusted(String address) {
-        Log.d(tag, "isAddressTrusted(" + address + ")?");
+//        Log.d(tag, "isAddressTrusted(" + address + ")?");
 
         ArrayList<AppDevice> trustedDevices = new ArrayList<AppDevice>();
 
@@ -334,7 +330,7 @@ public class AppDelegate extends Application {
 
         for (AppDevice d : trustedDevices) {
             if (d.getAddress().equals(address)) {
-                Log.d(tag, "getDeviceFromAddress() returning device: " + d.getName());
+//                Log.d(tag, "getDeviceFromAddress() returning device: " + d.getName());
                 return d;
             }
         }
@@ -421,16 +417,16 @@ public class AppDelegate extends Application {
     }
 
     public void dismissNotification() {
-        if (notification != null) {
+        if (notificationDisplayed) {
             notificationManager.cancel(R.string.service_notification_id);
             notificationDisplayed = false;
         }
     }
 
     public void showNotification() {
-        if (isPrefEnabled("showNotifications") && isServiceRunning) {
+        if (sharedPreferences.getBoolean("showNotifications", false) && isServiceRunning) {
             if (!notificationDisplayed) {
-                Log.d(tag, "showNotification()");
+//                Log.d(tag, "showNotification()");
                 notification  = new Notification.Builder(this)
                         .setContentTitle(getResources().getString(R.string.service_notificationTitle))
                         .setContentText(getResources().getString(R.string.service_notificationText))
@@ -467,13 +463,13 @@ public class AppDelegate extends Application {
             trustedWifiNetworks = DeviceListLoader.loadDeviceList(
                     AppDevice.DeviceType.WIFI, openFileInput(Common.deviceFile));
 
-            Log.d(tag, String.format("Got %d BT devices", trustedBluetoothDevices.size()));
-            Log.d(tag, String.format("Got %d Wifi devices", trustedWifiNetworks.size()));
+//            Log.d(tag, String.format("Got %d BT devices", trustedBluetoothDevices.size()));
+//            Log.d(tag, String.format("Got %d Wifi devices", trustedWifiNetworks.size()));
         } catch (Exception e) {
             // nothing
         }
 
-        Log.d(tag, "loadDevices() done");
+//        Log.d(tag, "loadDevices() done");
     }
 
     // device admin stuff
@@ -499,11 +495,11 @@ public class AppDelegate extends Application {
 
     public void setLastScannedNetworks(ArrayList<AppDevice> networks) {
         lastScannedNetworks = networks;
-        Log.d(tag, "added " + networks.size() + " to scanned data");
+//        Log.d(tag, "added " + networks.size() + " to scanned data");
     }
 
     public ArrayList<AppDevice> getLastScannedNetworks() {
-        Log.d(tag, "returning " + lastScannedNetworks.size() + " scanned network data");
+//        Log.d(tag, "returning " + lastScannedNetworks.size() + " scanned network data");
         return lastScannedNetworks;
     }
 

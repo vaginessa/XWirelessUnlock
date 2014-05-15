@@ -25,7 +25,7 @@ public class AppDevice implements Parcelable {
         this.deviceAddress = address;
         this.chargingOnly = chargingOnly;
 
-        Log.d(tag, String.format("Created device %s", deviceName));
+        //Log.d(tag, String.format("Created device %s", deviceName));
     }
 
     public String getName() {
@@ -74,7 +74,7 @@ public class AppDevice implements Parcelable {
 
     // this is needed to make the parcel
     public AppDevice(Parcel source){
-        Log.d(tag, "ParcelData(Parcel source): time to put back parcel data");
+        //Log.d(tag, "ParcelData(Parcel source): time to put back parcel data");
         String dType;
         dType = source.readString();
         deviceName = source.readString();

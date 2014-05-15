@@ -5,6 +5,8 @@ import android.app.admin.DevicePolicyManager;
 import android.content.*;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceActivity;
+import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -31,7 +33,6 @@ public class MainActivity extends ActionBarActivity {
     private static final String tag = "WirelessUnlock/MainActivity";
 
     public static AppDelegate appDelegate;
-    private SharedPreferences sharedPreferences;
 
     private MessageReceiver messageReceiver = null;
     private RefreshDevicesReceiver refreshDevicesReceiver = null;
@@ -59,8 +60,6 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.main);
         appDelegate = (AppDelegate) getApplicationContext();
 
-        sharedPreferences = appDelegate.getSharedPreferences();
-
         devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
         deviceAdmin = appDelegate.getDeviceAdmin();
 
@@ -79,7 +78,16 @@ public class MainActivity extends ActionBarActivity {
         trustedBluetoothList = (ListView) findViewById(R.id.list_trusted_bluetooth_devices);
         trustedWifiList = (ListView) findViewById(R.id.list_trusted_wifi_devices);
 
+        createSharedPrefs();
         appDelegate.loadDevices();
+    }
+
+    private void createSharedPrefs() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putBoolean("showNotifications", false);
+        editor.putBoolean("enableApp", true);
+        editor.commit();
     }
 
     @Override
@@ -132,30 +140,24 @@ public class MainActivity extends ActionBarActivity {
         trustedBluetoothList.setOnItemClickListener(bluetoothClickListener);
         trustedWifiList.setOnItemClickListener(wifiClickListener);
 
-        // this defaults to true
-        if (!sharedPreferences.getBoolean("enableApp", true)) {
-            Log.d(tag, "control disabled");
-            lockStatusView.setText(getResources().getString(R.string.main_appDisabled));
-        } else {
-            Log.d(tag, "control enabled");
 
-            // register message receiver if not already
-            if (messageReceiver == null) {
-                messageReceiver = new MessageReceiver();
-            }
-            IntentFilter messageIntentFilter = new IntentFilter(Common.messageIntentAction);
-            registerReceiver(messageReceiver, messageIntentFilter);
-
-            // register deviceRefreshReceiver
-            if (refreshDevicesReceiver == null) {
-                refreshDevicesReceiver = new RefreshDevicesReceiver();
-                IntentFilter refreshIntentFilter = new IntentFilter(Common.refreshDevicesIntentAction);
-                registerReceiver(refreshDevicesReceiver, refreshIntentFilter);
-            }
-
-            appDelegate.processChanges();
+        // register message receiver if not already
+        if (messageReceiver == null) {
+            messageReceiver = new MessageReceiver();
         }
+        IntentFilter messageIntentFilter = new IntentFilter(Common.messageIntentAction);
+        registerReceiver(messageReceiver, messageIntentFilter);
+
+        // register deviceRefreshReceiver
+        if (refreshDevicesReceiver == null) {
+            refreshDevicesReceiver = new RefreshDevicesReceiver();
+            IntentFilter refreshIntentFilter = new IntentFilter(Common.refreshDevicesIntentAction);
+            registerReceiver(refreshDevicesReceiver, refreshIntentFilter);
+        }
+
+        appDelegate.processChanges();
     }
+
 
     @Override
     public void onDestroy() {
@@ -171,7 +173,7 @@ public class MainActivity extends ActionBarActivity {
             try {
                 unregisterReceiver(messageReceiver);
             } catch (IllegalArgumentException e) {
-                Log.d(tag, "messageReceiver " + e.getMessage());
+//                Log.d(tag, "messageReceiver " + e.getMessage());
             }
         }
 
@@ -180,7 +182,7 @@ public class MainActivity extends ActionBarActivity {
             try {
                 unregisterReceiver(refreshDevicesReceiver);
             } catch (IllegalArgumentException e) {
-                Log.d(tag, "refreshDevicesReceiver " + e.getMessage());
+//                Log.d(tag, "refreshDevicesReceiver " + e.getMessage());
             }
         }
 
@@ -271,7 +273,7 @@ public class MainActivity extends ActionBarActivity {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id)
         {
-            Log.d(tag, "clickListener fired on " + position);
+//            Log.d(tag, "clickListener fired on " + position);
             AppDevice d = trustedWifiNetworks.get(position);
 
             Intent i = new Intent(getApplicationContext(), DeviceSettingsActivity.class);
@@ -285,7 +287,7 @@ public class MainActivity extends ActionBarActivity {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id)
         {
-            Log.d(tag, "clickListener fired on " + position);
+//            Log.d(tag, "clickListener fired on " + position);
             AppDevice d = trustedBluetoothDevices.get(position);
 
             Intent i = new Intent(getApplicationContext(), DeviceSettingsActivity.class);
@@ -299,11 +301,11 @@ public class MainActivity extends ActionBarActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(tag, "MessageReceiver!");
+//            Log.d(tag, "MessageReceiver!");
 
             String lockStatus = intent.getStringExtra("message");
 
-            Log.d(tag, "lockStatus: " + lockStatus);
+//            Log.d(tag, "lockStatus: " + lockStatus);
 
             if (lockStatus != null) {
                 lockStatusView.setText(lockStatus);
@@ -314,7 +316,7 @@ public class MainActivity extends ActionBarActivity {
     public class RefreshDevicesReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(tag, "RefreshDevicesReceiver!");
+//            Log.d(tag, "RefreshDevicesReceiver!");
 
             trustedBluetoothDevices = appDelegate.getTrustedBluetoothDevices();
             trustedWifiNetworks = appDelegate.getTrustedWifiNetworks();

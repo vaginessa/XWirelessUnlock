@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
 import com.raidzero.wirelessunlock.global.AppDelegate;
 import com.raidzero.wirelessunlock.global.Common;
@@ -11,20 +12,12 @@ import com.raidzero.wirelessunlock.global.Common;
 /**
  * Created by raidzero on 5/10/14 5:25 PM
  */
-public class BluetoothReceiver extends BroadcastReceiver {
+public class BluetoothReceiver extends IntentReceiver {
     private static final String tag = "WirelessUnlock/BluetoothReceiver";
-
-    AppDelegate appDelegate = Common.getAppDelegate();
 
     @Override
     public void onReceive(Context context, Intent intent) {
-
-        if (!appDelegate.isPrefEnabled("enableApp")) {
-            // don't do anything
-            return;
-        }
-
-        final String action = intent.getAction();
+        super.onReceive(context, intent);
 
         if (action.equals(BluetoothDevice.ACTION_ACL_CONNECTED)) {
             BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);

@@ -43,7 +43,7 @@ public class DeviceListLoader {
 
 
     public static ArrayList<AppDevice> loadDeviceList(AppDevice.DeviceType targetType, FileInputStream stream) {
-        Log.d(tag, "loadDeviceList() called");
+        //Log.d(tag, "loadDeviceList() called");
         BufferedReader reader;
         ArrayList<AppDevice> rtn = new ArrayList<AppDevice>();
 
@@ -69,7 +69,7 @@ public class DeviceListLoader {
                 }
 
                 if (targetType != dType) {
-                    Log.d(tag, "Not loading device of type " + strType);
+                    //Log.d(tag, "Not loading device of type " + strType);
                     continue;
                 }
 
@@ -82,7 +82,7 @@ public class DeviceListLoader {
             }
 
             String strType = (targetType == AppDevice.DeviceType.BLUETOOTH) ? "BLUETOOTH" : "WIFI";
-            Log.d(tag, String.format("returning %d %s devices.", rtn.size(), strType));
+            //Log.d(tag, String.format("returning %d %s devices.", rtn.size(), strType));
 
             stream.close();
             return rtn;
