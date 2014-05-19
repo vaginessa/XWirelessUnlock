@@ -1,5 +1,6 @@
 package com.raidzero.wirelessunlock.activities;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceActivity;
 import android.os.Bundle;
@@ -20,6 +21,9 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        getPreferenceManager().setSharedPreferencesMode(Context.MODE_WORLD_READABLE);
+
         addPreferencesFromResource(R.xml.preferences);
         this.appDelegate = Common.getAppDelegate();
     }
@@ -47,9 +51,11 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         if (key.equals("enableApp")) {
             if (!sharedPreferences.getBoolean(key, false)) {
                 Log.d(tag, "disabled app");
-                // TODO: unset disableLock shared pref
+                appDelegate.dismissNotification();
+                appDelegate.setLockState(false);
                 return;
             } else {
+                appDelegate.showNotification();
                 appDelegate.processChanges();
             }
         }

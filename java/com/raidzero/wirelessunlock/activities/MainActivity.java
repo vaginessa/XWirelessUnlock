@@ -1,11 +1,9 @@
 package com.raidzero.wirelessunlock.activities;
 
-import android.app.Activity;
 import android.app.admin.DevicePolicyManager;
 import android.content.*;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -50,28 +48,12 @@ public class MainActivity extends ActionBarActivity {
     DeviceListAdapter btAdapter;
     DeviceListAdapter wifiAdapter;
 
-    // device admin
-    ComponentName deviceAdmin;
-    DevicePolicyManager devicePolicyManager;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main);
         appDelegate = (AppDelegate) getApplicationContext();
-
-        devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
-        deviceAdmin = appDelegate.getDeviceAdmin();
-
-        if (!devicePolicyManager.isAdminActive(deviceAdmin)) {
-
-            Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-            intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, deviceAdmin);
-            intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                    getResources().getString(R.string.device_admin_description));
-
-            startActivityForResult(intent, Common.ENABLE_ADMIN_REQUEST_CODE);
-        }
 
         lockStatusView = (TextView) findViewById(R.id.textView_lockStatus);
 
@@ -83,10 +65,16 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void createSharedPrefs() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences prefs = getSharedPreferences("com.raidzero.wirelessunlock_preferences", Context.MODE_WORLD_READABLE);
+
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean("showNotifications", false);
-        editor.putBoolean("enableApp", true);
+
+        if (!prefs.contains("showNotifications")) {
+            editor.putBoolean("showNotifications", false);
+        }
+        if (!prefs.contains("enableApp")) {
+            editor.putBoolean("enableApp", true);
+        }
         editor.commit();
     }
 
@@ -210,13 +198,6 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void uninstallApplication() {
-        // deactivate device admin
-        if (devicePolicyManager.isAdminActive(deviceAdmin)) {
-
-            // in order to even get here, the admin has to be active, but just in case
-            devicePolicyManager.removeActiveAdmin(deviceAdmin);
-        }
-
         // now launch uninstall
         Uri packageUri = Uri.parse("package:com.raidzero.wirelessunlock");
         Intent uninstallIntent =

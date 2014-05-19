@@ -1,9 +1,7 @@
 package com.raidzero.wirelessunlock.receivers;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import com.raidzero.wirelessunlock.global.AppDelegate;
 import com.raidzero.wirelessunlock.global.Common;
@@ -26,7 +24,5 @@ public class ScreenReceiver extends IntentReceiver {
         if (action.equals(Intent.ACTION_SCREEN_OFF)) {
             appDelegate.setScreenState(AppDelegate.ScreenPowerState.OFF);
         }
-
-
     }
 }

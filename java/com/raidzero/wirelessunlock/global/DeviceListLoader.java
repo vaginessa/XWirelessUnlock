@@ -1,7 +1,5 @@
 package com.raidzero.wirelessunlock.global;
 
-import android.util.Log;
-
 import java.io.*;
 import java.util.ArrayList;
 

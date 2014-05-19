@@ -2,7 +2,6 @@ package com.raidzero.wirelessunlock.global;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Log;
 
 /**
  * Created by raidzero on 5/8/14 10:49 AM

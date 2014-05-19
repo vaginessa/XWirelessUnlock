@@ -4,7 +4,6 @@ import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.admin.DevicePolicyManager;
 import android.content.*;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -15,7 +14,6 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import com.raidzero.wirelessunlock.R;
 import com.raidzero.wirelessunlock.activities.MainActivity;
-import com.raidzero.wirelessunlock.receivers.AdminReceiver;
 import com.raidzero.wirelessunlock.receivers.ScreenReceiver;
 
 import java.io.BufferedWriter;
@@ -48,13 +46,6 @@ public class AppDelegate extends Application {
     private ArrayList<AppDevice> trustedBluetoothDevices = new ArrayList<AppDevice>();
     private ArrayList<AppDevice> trustedWifiNetworks = new ArrayList<AppDevice>();
 
-    // device admin stuff
-    private boolean deviceAdminActive = false;
-    private DevicePolicyManager devicePolicyManager;
-    private ComponentName deviceAdmin;
-    private int currentPasswordQuality;
-    private int currentPasswordLength;
-
     private ScreenReceiver screenReceiver = null;
     public enum ScreenPowerState {
         ON, OFF
@@ -70,12 +61,9 @@ public class AppDelegate extends Application {
         Log.d(tag, "onCreate()");
 
         Common.appDelegate = this;
-        this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        this.sharedPreferences = getSharedPreferences("com.raidzero.wirelessunlock_preferences", Context.MODE_WORLD_READABLE);
 
         this.mainActivityIntent = new Intent(this, MainActivity.class);
-
-        this.devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
-        this.deviceAdmin = new ComponentName(this, AdminReceiver.class);
 
         this.notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         this.largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
@@ -182,7 +170,7 @@ public class AppDelegate extends Application {
 
     public synchronized void startUnlockService(String reason) {
         if (!isServiceRunning) {
-            // TODO: set disableLock shared pref
+            setLockState(true);
             isServiceRunning = true;
 
             writeLog(reason + " Started service");
@@ -194,13 +182,20 @@ public class AppDelegate extends Application {
     public synchronized void stopUnlockService(String reason) {
         if (isServiceRunning) {
 
-            // TODO: unset disableLock shared pref
+            setLockState(false);
             isServiceRunning = false;
             writeLog(reason + " Stopped service");
         }
         dismissNotification();
 
         broadcastServiceState();
+    }
+
+    public void setLockState(boolean disableLock) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("disableLock", disableLock);
+        editor.commit();
+        Log.d(tag, "set disableLock: " + disableLock);
     }
 
     public void broadcastServiceState() {
@@ -444,19 +439,6 @@ public class AppDelegate extends Application {
         }
 
 //        Log.d(tag, "loadDevices() done");
-    }
-
-    // device admin stuff
-    public void setDeviceAdminActive() {
-        deviceAdminActive = true;
-    }
-
-    public void setDeviceAdminInactive() {
-        deviceAdminActive = false;
-    }
-
-    public ComponentName getDeviceAdmin() {
-        return deviceAdmin;
     }
 
     public void setScreenState(ScreenPowerState state) {
