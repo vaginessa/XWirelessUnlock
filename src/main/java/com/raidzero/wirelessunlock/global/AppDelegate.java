@@ -14,7 +14,6 @@ import android.os.BatteryManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import com.raidzero.wirelessunlock.R;
-import com.raidzero.wirelessunlock.UnlockService;
 import com.raidzero.wirelessunlock.activities.MainActivity;
 import com.raidzero.wirelessunlock.receivers.AdminReceiver;
 import com.raidzero.wirelessunlock.receivers.ScreenReceiver;
@@ -183,20 +182,7 @@ public class AppDelegate extends Application {
 
     public synchronized void startUnlockService(String reason) {
         if (!isServiceRunning) {
-
-            if (devicePolicyManager.isAdminActive(deviceAdmin)) {
-                // save password params
-                currentPasswordQuality = devicePolicyManager.getPasswordQuality(deviceAdmin);
-                currentPasswordLength = devicePolicyManager.getPasswordMinimumLength(deviceAdmin);
-
-                // relax
-                devicePolicyManager.setPasswordQuality(deviceAdmin, DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED);
-                devicePolicyManager.setPasswordMinimumLength(deviceAdmin, 0);
-
-                Log.d(tag, "device admin: set stuff");
-            }
-
-            startService(new Intent(this, UnlockService.class));
+            // TODO: set disableLock shared pref
             isServiceRunning = true;
 
             writeLog(reason + " Started service");
@@ -208,19 +194,7 @@ public class AppDelegate extends Application {
     public synchronized void stopUnlockService(String reason) {
         if (isServiceRunning) {
 
-            // stop device administrator
-            if (devicePolicyManager.isAdminActive(deviceAdmin)) {
-                // re-apply password params
-                devicePolicyManager.setPasswordQuality(deviceAdmin, currentPasswordQuality);
-                devicePolicyManager.setPasswordMinimumLength(deviceAdmin, currentPasswordLength);
-
-                if (screenState == ScreenPowerState.OFF) {
-                    devicePolicyManager.lockNow();
-                }
-                Log.d(tag, "device admin: stopped stuff");
-            }
-
-            stopService(new Intent(this, UnlockService.class));
+            // TODO: unset disableLock shared pref
             isServiceRunning = false;
             writeLog(reason + " Stopped service");
         }

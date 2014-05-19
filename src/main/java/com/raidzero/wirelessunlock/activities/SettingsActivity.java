@@ -47,7 +47,7 @@ public class SettingsActivity extends PreferenceActivity implements SharedPrefer
         if (key.equals("enableApp")) {
             if (!sharedPreferences.getBoolean(key, false)) {
                 Log.d(tag, "disabled app");
-                appDelegate.stopUnlockService("Lock screen control disabled.");
+                // TODO: unset disableLock shared pref
                 return;
             } else {
                 appDelegate.processChanges();
