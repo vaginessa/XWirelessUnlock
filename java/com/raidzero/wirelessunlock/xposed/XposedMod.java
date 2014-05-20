@@ -32,63 +32,39 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
 
         if (loadPackageParam.packageName.contains("com.android.keyguard")) {
 
+            // prevent showLocked(). This takes care of state changes with screen on
             findAndHookMethod("com.android.keyguard.KeyguardViewMediator", loadPackageParam.classLoader,
                     "showLocked", "android.os.Bundle", new XC_MethodHook() {
                         @Override
                         protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                            XLog("before lock screen");
                             if (isEnabled("disableLock")) {
-                                XLog("preventing call");
                                 param.setResult(null);
                             }
                         }
                     });
 
-            findAndHookMethod("com.android.keyguard.KeyguardViewMediator", loadPackageParam.classLoader,
-                    "onScreenTurnedOff", int.class, new XC_MethodHook() {
-                        @Override
-                        protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                            XLog("before onScreenTurnedOff");
-                        }
-                    });
-
-            final Class<?> c = findClass("com.android.keyguard.KeyguardViewMediator", loadPackageParam.classLoader);
-            final Method m = findMethodExact(c, "hideLocked");
+            // dismiss any lock screen shown. This takes care of state changes with screen off
             final Class<?> callback = findClass("com.android.internal.policy.IKeyguardShowCallback", loadPackageParam.classLoader);
 
-                findAndHookMethod("com.android.keyguard.KeyguardViewMediator", loadPackageParam.classLoader,
-                "onScreenTurnedOn", callback, new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        XLog("after onScreenTurnedOn");
-                        if (isEnabled("disableLock")) {
-                            // TODO: hideLocked();
-                        }
-                    }
-                });
-
             findAndHookMethod("com.android.keyguard.KeyguardViewMediator", loadPackageParam.classLoader,
-                    "doKeyguardLocked", "android.os.Bundle", new XC_MethodHook() {
-                        @Override
-                        protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                            XLog("before doKeyguardLocked");
-                            if (isEnabled("disableLock")) {
-                                XLog("Preventing call");
-                                param.setResult(null);
-                            }
-                        }
-                    });
+            "onScreenTurnedOn", callback, new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    if (isEnabled("disableLock")) {
+                        final Object keyguardViewMediator = param.thisObject;
+                        callMethod(keyguardViewMediator, "hideLocked");
+                    }
+                }
+            });
         }
-
-
     }
 
     private boolean isEnabled(String key) {
         prefs.reload();
-        boolean rtn = prefs.getBoolean(key, false);
-        XLog("isPrefEnabled(" + key + ")? " + rtn);
+        return prefs.getBoolean(key, false);
 
-        return rtn;
+        //XLog("isPrefEnabled(" + key + ")? " + rtn);
+        //return rtn;
     }
 
     private void loadPrefs() {

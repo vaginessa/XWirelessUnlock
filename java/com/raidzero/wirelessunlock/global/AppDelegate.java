@@ -192,10 +192,14 @@ public class AppDelegate extends Application {
     }
 
     public void setLockState(boolean disableLock) {
+        isServiceRunning = disableLock;
+
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean("disableLock", disableLock);
         editor.commit();
         Log.d(tag, "set disableLock: " + disableLock);
+
+        broadcastServiceState();
     }
 
     public void broadcastServiceState() {
